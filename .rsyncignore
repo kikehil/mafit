@@ -1,0 +1,44 @@
+# Archivos y carpetas a excluir al usar rsync
+
+# Dependencias (se instalan en el servidor)
+node_modules/
+vendor/
+public/build/
+public/hot/
+
+# Archivos de configuración local
+.env
+.env.backup
+.env.production
+DB_HOST
+DB_PASSWORD
+DB_USERNAME
+
+# Archivos de desarrollo Windows
+*.bat
+
+# Archivos de sistema
+.git/
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+auth.json
+npm-debug.log
+yarn-error.log
+.fleet/
+.idea/
+.vscode/
+
+# Archivos temporales y backups
+mafit_backup.sql
+query
+tmp_check_headers.php
+
+# Docker (si no se usa en producción)
+docker/
+docker-compose.yml
+Dockerfile
+
+# Storage (se crea en el servidor)
+public/storage/
+
