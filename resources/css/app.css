@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Remover estilos por defecto de enlaces en navegación */
+nav a {
+    text-decoration: none !important;
+    color: inherit;
+}
+
+
+
+
+
+
