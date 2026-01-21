@@ -31,9 +31,3 @@ class Plaza extends Model
 
 
 
-
-
-
-
-
-

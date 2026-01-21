@@ -33,9 +33,3 @@ class VerifyEmailController extends Controller
 
 
 
-
-
-
-
-
-

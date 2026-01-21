@@ -31,7 +31,6 @@ Route::middleware('auth')->group(function () {
     // MAF Import
     Route::get('/maf/import', [MafImportController::class, 'create'])->name('maf.import.create');
     Route::post('/maf/import', [MafImportController::class, 'store'])->name('maf.import.store');
-    Route::get('/maf/import/template', [MafImportController::class, 'downloadTemplate'])->name('maf.import.template');
 
     // MAF Batches
     Route::get('/maf/batches', [MafBatchController::class, 'index'])->name('maf.batches.index');
@@ -53,7 +52,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/buscar-tienda', [InventarioController::class, 'buscarTienda'])->middleware('module:inventario.captura')->name('buscar-tienda');
         Route::post('/obtener-equipos', [InventarioController::class, 'obtenerEquipos'])->middleware('module:inventario.captura')->name('obtener-equipos');
         Route::post('/guardar', [InventarioController::class, 'guardarInventario'])->middleware('module:inventario.captura')->name('guardar');
-        Route::post('/agregar-equipo', [InventarioController::class, 'agregarEquipo'])->middleware('module:inventario.captura')->name('agregar-equipo');
         Route::post('/buscar-tienda-consulta', [InventarioController::class, 'buscarTiendaConsulta'])->middleware('module:inventario.consulta')->name('buscar-tienda-consulta');
         Route::post('/obtener-equipos-consulta', [InventarioController::class, 'obtenerEquiposConsulta'])->middleware('module:inventario.consulta')->name('obtener-equipos-consulta');
         Route::post('/obtener-tiendas-realizados', [InventarioController::class, 'obtenerTiendasRealizados'])->middleware('module:inventario.realizados')->name('obtener-tiendas-realizados');

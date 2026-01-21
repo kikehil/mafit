@@ -1,3 +1,5 @@
+
+
 <?php $__env->startSection('title', 'Nueva Importación MAF'); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -5,34 +7,10 @@
     <div class="px-4 py-5 sm:p-6">
         <h2 class="text-2xl font-bold text-gray-900 mb-6">Cargar Archivo Maestro (MAF)</h2>
 
-        <div class="mb-6 space-y-4">
-            <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <p class="text-sm text-blue-800">
-                    <strong>Nota importante:</strong> El sistema realizará una limpieza automática de caracteres invisibles y normalización de datos antes de procesar el archivo.
-                </p>
-            </div>
-            
-            <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-green-800 mb-1">
-                            ¿Necesitas una plantilla para la importación?
-                        </p>
-                        <p class="text-sm text-green-700">
-                            Descarga la plantilla Excel con la estructura ideal y un ejemplo de datos.
-                        </p>
-                    </div>
-                    <a 
-                        href="<?php echo e(route('maf.import.template')); ?>" 
-                        class="ml-4 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 text-sm font-medium whitespace-nowrap flex items-center"
-                    >
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        Descargar Plantilla
-                    </a>
-                </div>
-            </div>
+        <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p class="text-sm text-blue-800">
+                <strong>Nota importante:</strong> El sistema realizará una limpieza automática de caracteres invisibles y normalización de datos antes de procesar el archivo.
+            </p>
         </div>
 
         <form action="<?php echo e(route('maf.import.store')); ?>" method="POST" enctype="multipart/form-data" class="space-y-6">
@@ -85,12 +63,6 @@
     </div>
 </div>
 <?php $__env->stopSection(); ?>
-
-
-
-
-
-
 
 
 

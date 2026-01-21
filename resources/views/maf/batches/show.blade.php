@@ -55,7 +55,7 @@
                 </div>
                 <div class="px-4 py-5 bg-gray-50 rounded-lg">
                     <dt class="text-sm font-medium text-gray-500">Usuario</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ $batch->uploadedBy->name ?? 'N/A' }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900">{{ $batch->uploadedBy->name }}</dd>
                 </div>
                 <div class="px-4 py-5 bg-gray-50 rounded-lg">
                     <dt class="text-sm font-medium text-gray-500">Inicio</dt>

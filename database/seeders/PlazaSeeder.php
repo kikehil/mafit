@@ -38,9 +38,3 @@ class PlazaSeeder extends Seeder
 
 
 
-
-
-
-
-
-

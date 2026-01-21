@@ -17,9 +17,3 @@ Artisan::command('inspire', function () {
 
 
 
-
-
-
-
-
-

@@ -37,29 +37,15 @@
                 <p class="text-sm text-gray-600 mt-2" id="ultimoInventario"></p>
             </div>
 
-            <!-- Filtro de Categoría y Botón Agregar Equipo -->
-            <div class="mb-4 hidden" id="filtroCategoriaContainer">
-                <div class="flex gap-3 items-end">
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Categoría</label>
-                        <select 
-                            id="filtroCategoria"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                            <option value="">Todas las categorías</option>
-                        </select>
-                    </div>
-                    <button 
-                        type="button"
-                        id="btnAgregarEquipo"
-                        class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 font-medium whitespace-nowrap"
-                    >
-                        <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        Agregar Equipo
-                    </button>
-                </div>
+            <!-- Filtro de Categoría -->
+            <div id="filtroCategoriaContainer" class="mb-4 hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Categoría</label>
+                <select 
+                    id="filtroCategoria"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="">Todas las categorías</option>
+                </select>
             </div>
 
             <form id="inventarioForm">
@@ -94,97 +80,6 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
         </svg>
         <p class="text-gray-500 text-lg">Busque una tienda para comenzar</p>
-    </div>
-</div>
-
-<!-- Modal para Agregar Equipo -->
-<div id="modalAgregarEquipo" class="fixed inset-0 z-50 hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <!-- Overlay -->
-        <div id="modalAgregarEquipoOverlay" class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"></div>
-
-        <!-- Modal centrado -->
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div class="sm:flex sm:items-start">
-                    <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Agregar Nuevo Equipo</h3>
-                        <form id="formAgregarEquipo">
-                            <div class="space-y-4">
-                                <div>
-                                    <label for="nuevaPlaca" class="block text-sm font-medium text-gray-700 mb-1">
-                                        Placa <span class="text-red-500">*</span>
-                                    </label>
-                                    <input 
-                                        type="text" 
-                                        id="nuevaPlaca" 
-                                        name="placa"
-                                        required
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="Ingrese la placa del equipo"
-                                    >
-                                </div>
-                                <div>
-                                    <label for="nuevaMarca" class="block text-sm font-medium text-gray-700 mb-1">
-                                        Marca <span class="text-red-500">*</span>
-                                    </label>
-                                    <input 
-                                        type="text" 
-                                        id="nuevaMarca" 
-                                        name="marca"
-                                        required
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="Ingrese la marca del equipo"
-                                    >
-                                </div>
-                                <div>
-                                    <label for="nuevoModelo" class="block text-sm font-medium text-gray-700 mb-1">
-                                        Modelo <span class="text-red-500">*</span>
-                                    </label>
-                                    <input 
-                                        type="text" 
-                                        id="nuevoModelo" 
-                                        name="modelo"
-                                        required
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="Ingrese el modelo del equipo"
-                                    >
-                                </div>
-                                <div>
-                                    <label for="nuevaSerie" class="block text-sm font-medium text-gray-700 mb-1">
-                                        Serie <span class="text-red-500">*</span>
-                                    </label>
-                                    <input 
-                                        type="text" 
-                                        id="nuevaSerie" 
-                                        name="serie"
-                                        required
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="Ingrese el número de serie"
-                                    >
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button 
-                    type="button" 
-                    id="btnGuardarEquipo"
-                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm"
-                >
-                    Guardar
-                </button>
-                <button 
-                    type="button" 
-                    id="btnCancelarAgregarEquipo"
-                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                >
-                    Cancelar
-                </button>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -275,90 +170,10 @@ function cerrarModal() {
     modal.classList.add('hidden');
 }
 
-function abrirModalAgregarEquipo() {
-    if (!tiendaSeleccionada) {
-        mostrarModal('Información', 'Por favor seleccione una tienda primero', 'info');
-        return;
-    }
-    const modal = document.getElementById('modalAgregarEquipo');
-    modal.classList.remove('hidden');
-    // Limpiar formulario
-    document.getElementById('formAgregarEquipo').reset();
-}
-
-function cerrarModalAgregarEquipo() {
-    const modal = document.getElementById('modalAgregarEquipo');
-    modal.classList.add('hidden');
-    document.getElementById('formAgregarEquipo').reset();
-}
-
-function guardarNuevoEquipo() {
-    if (!tiendaSeleccionada) {
-        mostrarModal('Error', 'No hay tienda seleccionada', 'error');
-        return;
-    }
-    
-    const placa = document.getElementById('nuevaPlaca').value.trim();
-    const marca = document.getElementById('nuevaMarca').value.trim();
-    const modelo = document.getElementById('nuevoModelo').value.trim();
-    const serie = document.getElementById('nuevaSerie').value.trim();
-    
-    if (!placa || !marca || !modelo || !serie) {
-        mostrarModal('Error', 'Por favor complete todos los campos requeridos', 'error');
-        return;
-    }
-    
-    // Deshabilitar botón mientras se guarda
-    const btnGuardar = document.getElementById('btnGuardarEquipo');
-    btnGuardar.disabled = true;
-    btnGuardar.textContent = 'Guardando...';
-    
-    fetch('{{ route("inventario.agregar-equipo") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify({
-            cr: tiendaSeleccionada.cr,
-            plaza: tiendaSeleccionada.plaza,
-            placa: placa,
-            marca: marca,
-            modelo: modelo,
-            serie: serie
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            mostrarModal('Éxito', 'Equipo agregado exitosamente', 'success');
-            cerrarModalAgregarEquipo();
-            // Recargar equipos
-            seleccionarTienda(tiendaSeleccionada.cr, tiendaSeleccionada.plaza);
-        } else {
-            mostrarModal('Error', data.message || 'Error al agregar el equipo', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        mostrarModal('Error', 'Error al agregar el equipo. Por favor intente nuevamente.', 'error');
-    })
-    .finally(() => {
-        btnGuardar.disabled = false;
-        btnGuardar.textContent = 'Guardar';
-    });
-}
-
-// Filtro de categoría y modal agregar equipo
+// Filtro de categoría
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('modalOverlay').addEventListener('click', cerrarModal);
     document.getElementById('modalBtnCerrar').addEventListener('click', cerrarModal);
-    
-    // Modal agregar equipo
-    document.getElementById('modalAgregarEquipoOverlay').addEventListener('click', cerrarModalAgregarEquipo);
-    document.getElementById('btnCancelarAgregarEquipo').addEventListener('click', cerrarModalAgregarEquipo);
-    document.getElementById('btnAgregarEquipo').addEventListener('click', abrirModalAgregarEquipo);
-    document.getElementById('btnGuardarEquipo').addEventListener('click', guardarNuevoEquipo);
     
     // Event listener para el filtro de categoría
     const filtroCategoria = document.getElementById('filtroCategoria');
@@ -526,29 +341,17 @@ function mostrarEquipos(data, categoriaFiltro = '') {
     // Filtrar categorías si se seleccionó una
     let categoriasAMostrar = data.categorias;
     if (categoriaFiltro && categoriaFiltro !== '') {
-        if (categoriaFiltro === 'Sin categoría') {
-            // Mostrar solo equipos sin categoría
-            categoriasAMostrar = data.categorias.filter(cat => !cat.categoria || cat.categoria === '' || cat.categoria === null);
-        } else {
-            // Mostrar solo la categoría seleccionada
-            categoriasAMostrar = data.categorias.filter(cat => {
-                const catNombre = cat.categoria || 'Sin categoría';
-                return catNombre.toUpperCase() === categoriaFiltro.toUpperCase();
-            });
-        }
+        categoriasAMostrar = data.categorias.filter(cat => 
+            cat.categoria && cat.categoria.toUpperCase() === categoriaFiltro.toUpperCase()
+        );
     }
     
     // Mantener el orden del array
     categoriasAMostrar.forEach(categoriaData => {
         const categoriaDiv = document.createElement('div');
         categoriaDiv.className = 'mb-6';
-        const categoriaNombre = categoriaData.categoria || 'Sin categoría';
-        // Usar estilo diferente para "Sin categoría"
-        const bgColor = categoriaNombre === 'Sin categoría' 
-            ? 'bg-gray-200 border-gray-400' 
-            : 'bg-blue-200 border-blue-400';
         categoriaDiv.innerHTML = `
-            <h4 class="text-xl font-bold text-gray-900 mb-4 px-4 py-3 rounded-lg shadow-md ${bgColor} border-2">${categoriaNombre}</h4>
+            <h4 class="text-xl font-bold text-gray-900 mb-4 px-4 py-3 rounded-lg shadow-md bg-blue-200 border-2 border-blue-400">${categoriaData.categoria || 'Sin categoría'}</h4>
             <div class="space-y-3">
                 ${categoriaData.equipos.map(equipo => crearFilaEquipo(equipo)).join('')}
             </div>
@@ -611,33 +414,15 @@ function actualizarFiltroCategoria(data) {
     // Limpiar opciones existentes excepto "Todas"
     select.innerHTML = '<option value="">Todas las categorías</option>';
     
-    // Obtener categorías únicas
-    const categoriasUnicas = new Set();
-    let tieneSinCategoria = false;
-    
+    // Agregar categorías disponibles
     data.categorias.forEach(categoriaData => {
-        if (categoriaData.categoria && categoriaData.categoria !== '') {
-            categoriasUnicas.add(categoriaData.categoria);
-        } else {
-            tieneSinCategoria = true;
+        if (categoriaData.categoria) {
+            const option = document.createElement('option');
+            option.value = categoriaData.categoria;
+            option.textContent = categoriaData.categoria;
+            select.appendChild(option);
         }
     });
-    
-    // Agregar categorías únicas
-    Array.from(categoriasUnicas).sort().forEach(categoria => {
-        const option = document.createElement('option');
-        option.value = categoria;
-        option.textContent = categoria;
-        select.appendChild(option);
-    });
-    
-    // Agregar "Sin categoría" si hay equipos sin categoría
-    if (tieneSinCategoria) {
-        const option = document.createElement('option');
-        option.value = 'Sin categoría';
-        option.textContent = 'Sin categoría';
-        select.appendChild(option);
-    }
     
     // Mostrar el filtro
     container.classList.remove('hidden');

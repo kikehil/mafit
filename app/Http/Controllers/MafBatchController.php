@@ -26,34 +26,10 @@ class MafBatchController extends Controller
     {
         \Illuminate\Support\Facades\Gate::authorize('view-maf-batches');
 
-        try {
-            $report = $service->reportForBatch($batch->id);
-        } catch (\Exception $e) {
-            \Log::error("Error al generar reporte para batch {$batch->id}: " . $e->getMessage());
-            // Retornar reporte vacío en caso de error
-            $report = [
-                'conflicts' => [
-                    'placa' => [],
-                    'activo' => [],
-                    'serie' => [],
-                ],
-                'duplicates' => [
-                    'placa' => [],
-                    'activo' => [],
-                    'serie' => [],
-                ],
-            ];
-        }
-
-        try {
-            $batch->load('uploadedBy');
-        } catch (\Exception $e) {
-            \Log::warning("Error al cargar relación uploadedBy para batch {$batch->id}: " . $e->getMessage());
-            // Continuar sin la relación si falla
-        }
+        $report = $service->reportForBatch($batch->id);
 
         return view('maf.batches.show', [
-            'batch' => $batch,
+            'batch' => $batch->load('uploadedBy'),
             'report' => $report,
         ]);
     }

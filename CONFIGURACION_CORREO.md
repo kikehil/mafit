@@ -26,9 +26,3 @@ MAIL_FROM_NAME="MAFIT"
 
 4. Si hay un error al enviar el correo, se registrará en los logs pero no afectará el guardado del inventario.
 
-
-
-
-
-
-

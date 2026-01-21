@@ -164,9 +164,3 @@ La forma más fácil es usar las **rutas completas** o ejecutar `configurar_xamp
 
 
 
-
-
-
-
-
-

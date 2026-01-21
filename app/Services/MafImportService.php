@@ -4,8 +4,6 @@ namespace App\Services;
 
 use App\Models\Maf;
 use App\Models\MafImportBatch;
-use App\Models\MafCategoriaMap;
-use App\Helpers\TextNorm;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Cell\RichText;
@@ -318,14 +316,30 @@ class MafImportService
 
     /**
      * Construye un mapa header_normalized => colIndex usando contains.
-     * NOTA: Este método ya no se usa, se mantiene por compatibilidad.
-     * El sistema ahora usa EXACT_HEADERS con validación estricta.
      */
     private function buildHeaderMap(array $headersNorm): array
     {
-        // Método legacy - ya no se usa con el sistema de EXACT_HEADERS
-        // Retornar array vacío para evitar errores si se llama accidentalmente
-        return [];
+        $map = [];
+        // Diccionario de headers normalizados a index
+        $dict = [];
+        foreach ($headersNorm as $idx => $h) {
+            if ($h !== '') {
+                $dict[$idx] = $h;
+            }
+        }
+
+        foreach (self::HEADER_ALIASES as $field => $aliases) {
+            foreach ($dict as $idx => $hNorm) {
+                foreach ($aliases as $alias) {
+                    if (mb_stripos($hNorm, $alias) !== false) {
+                        $map[$field] = $idx;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        return $map;
     }
 
     /**
@@ -430,9 +444,8 @@ class MafImportService
     /**
      * Prepara una fila para inserción respetando el orden fijo de columnas.
      * Devuelve null si la fila está completamente vacía en los campos relevantes.
-     * Aplica categoría automáticamente basándose en la descripción.
      */
-    private function prepareRowForInsert(int $batchId, int $rowNum, array $rowRaw, array $categoriaMap = []): ?array
+    private function prepareRowForInsert(int $batchId, int $rowNum, array $rowRaw): ?array
     {
         $plaza = $this->nullIfEmpty($this->cleanExcelText($rowRaw['plaza'] ?? ''));
         $cr = $this->nullIfEmpty($this->cleanExcelText($rowRaw['cr'] ?? ''));
@@ -451,13 +464,6 @@ class MafImportService
         $descripcion = $this->nullIfEmpty($this->cleanExcelText($rowRaw['descripcion'] ?? ''));
         $marca = $this->nullIfEmpty($this->cleanExcelText($rowRaw['marca'] ?? ''));
         $modelo = $this->nullIfEmpty($this->cleanExcelText($rowRaw['modelo'] ?? ''));
-
-        // Buscar categoría automáticamente basándose en la descripción
-        $categoria = null;
-        if ($descripcion && !empty($categoriaMap)) {
-            $descripcionKey = TextNorm::key($descripcion);
-            $categoria = $categoriaMap[$descripcionKey] ?? null;
-        }
 
         $allEmpty = $plaza === null
             && $cr === null
@@ -491,7 +497,6 @@ class MafImportService
             'valor_neto' => $valorNeto,
             'remanente' => $remanente,
             'descripcion' => $descripcion,
-            'categoria' => $categoria,
             'marca' => $marca,
             'modelo' => $modelo,
             'imported_at' => $now,
@@ -564,24 +569,11 @@ class MafImportService
                 'started_at' => now(),
             ]);
 
-            // Limpiar tabla maf completamente antes de cada importación
-            // Esto asegura que solo existan los datos del nuevo archivo importado
-            // Las foreign keys están configuradas con CASCADE o SET NULL, así que se manejan automáticamente
-            DB::statement('SET FOREIGN_KEY_CHECKS=0');
-            DB::table('maf')->truncate();
-            DB::statement('SET FOREIGN_KEY_CHECKS=1');
+            // Limpiar tabla maf ANTES de la transacción (ALTER TABLE hace commit implícito)
+            DB::table('maf')->delete();
+            DB::statement('ALTER TABLE maf AUTO_INCREMENT = 1');
 
-            // Cargar mapa de categorías en memoria (solo activos) para aplicar durante la importación
-            $categoriaMap = MafCategoriaMap::where('activo', 1)
-                ->pluck('categoria', 'descripcion_key')
-                ->toArray();
-
-            // Si la tabla está vacía, usar el mapeo hardcodeado como fallback
-            if (empty($categoriaMap)) {
-                $categoriaMap = $this->getDefaultCategoryMap();
-            }
-
-            DB::transaction(function () use ($batch, $path, $categoriaMap) {
+            DB::transaction(function () use ($batch, $path) {
                 $totalRows = 0;
                 $insertedRows = 0;
                 $rowsToInsert = [];
@@ -597,7 +589,7 @@ class MafImportService
                     }
 
                     $totalRows++;
-                    $rowData = $this->prepareRowForInsert($batch->id, $item['row_num'], $item['data'], $categoriaMap);
+                    $rowData = $this->prepareRowForInsert($batch->id, $item['row_num'], $item['data']);
                     if ($rowData === null) {
                         continue; // fila completamente vacía
                     }
@@ -647,140 +639,73 @@ class MafImportService
      */
     public function reportForBatch(int $batchId): array
     {
-        try {
-            $conflicts = [
-                'placa' => [],
-                'activo' => [],
-                'serie' => [],
-            ];
-
-            $duplicates = [
-                'placa' => [],
-                'activo' => [],
-                'serie' => [],
-            ];
-
-            $identifiers = ['placa', 'activo', 'serie'];
-
-            foreach ($identifiers as $identifier) {
-                try {
-                    // Query para encontrar conflictos y duplicados
-                    $results = DB::table('maf')
-                        ->select(
-                            $identifier . ' as value',
-                            DB::raw('COUNT(*) as rows_count'),
-                            DB::raw('COUNT(DISTINCT cr) as tiendas_distintas'),
-                            DB::raw('COUNT(DISTINCT plaza) as plazas_distintas')
-                        )
-                        ->where('batch_id', $batchId)
-                        ->whereNotNull($identifier)
-                        ->where($identifier, '!=', '')
-                        ->groupBy($identifier)
-                        ->havingRaw('COUNT(*) > 1')
-                        ->get();
-
-                    foreach ($results as $result) {
-                        $value = $result->value;
-                        $rowsCount = $result->rows_count;
-                        $tiendasDistintas = $result->tiendas_distintas;
-                        $plazasDistintas = $result->plazas_distintas;
-
-                        // Obtener ocurrencias
-                        $occurrences = DB::table('maf')
-                            ->select('row_num', 'plaza', 'cr', 'tienda', 'descripcion', 'marca', 'modelo')
-                            ->where('batch_id', $batchId)
-                            ->where($identifier, $value)
-                            ->orderBy('row_num')
-                            ->get()
-                            ->toArray();
-
-                        $item = [
-                            'value' => $value,
-                            'rows_count' => $rowsCount,
-                            'tiendas_distintas' => $tiendasDistintas,
-                            'plazas_distintas' => $plazasDistintas,
-                            'occurrences' => $occurrences,
-                        ];
-
-                        if ($tiendasDistintas > 1) {
-                            // CONFLICTO GRAVE: mismo identificador en 2+ tiendas distintas
-                            $conflicts[$identifier][] = $item;
-                        } else {
-                            // DUPLICADO SIMPLE: mismo identificador repetido en la misma tienda
-                            $duplicates[$identifier][] = $item;
-                        }
-                    }
-                } catch (\Exception $e) {
-                    // Si hay un error con un identificador específico, continuar con los demás
-                    \Log::warning("Error al procesar identificador {$identifier} para batch {$batchId}: " . $e->getMessage());
-                    continue;
-                }
-            }
-
-            return [
-                'conflicts' => $conflicts,
-                'duplicates' => $duplicates,
-            ];
-        } catch (\Exception $e) {
-            \Log::error("Error al generar reporte para batch {$batchId}: " . $e->getMessage());
-            // Retornar estructura vacía en caso de error
-            return [
-                'conflicts' => [
-                    'placa' => [],
-                    'activo' => [],
-                    'serie' => [],
-                ],
-                'duplicates' => [
-                    'placa' => [],
-                    'activo' => [],
-                    'serie' => [],
-                ],
-            ];
-        }
-    }
-
-    /**
-     * Obtiene el mapeo de categorías por defecto (hardcodeado)
-     * Se usa como fallback si la tabla maf_categoria_map está vacía
-     */
-    private function getDefaultCategoryMap(): array
-    {
-        $descripcionMap = [
-            "CAMARA CCTV" => "CCTV",
-            "CAMARA CCTV GIRATORIA" => "CCTV",
-            "DISCO DURO EXTERNO" => "CCTV",
-            "GRABADOR CCTV" => "CCTV",
-            "INSTALACION CCTV" => "CCTV",
-            "MICROFONO CCTV" => "CCTV",
-            "REGULADOR" => "ENERGIA",
-            "REGULADOR DE ENERGIA" => "ENERGIA",
-            "REGULADOR/UPS/BATERIA" => "ENERGIA",
-            "UPS P/ RESPALDO DE ENERGIA" => "ENERGIA",
-            "HAND HELD P/PROCESOS" => "MOVILIDAD",
-            "IMPRESORA P/PROCESOS" => "MOVILIDAD",
-            "TABLETA ELECTRONICA P/PROCESOS" => "MOVILIDAD",
-            "ESCANER - LECTOR" => "PUNTO DE VENTA",
-            "ESCANER DE MANO" => "PUNTO DE VENTA",
-            "ESCANER PARA ID" => "PUNTO DE VENTA",
-            "IMPRESORA P/PUNTO DE VENTA" => "PUNTO DE VENTA",
-            "MONITOR P/PUNTO DE VENTA (HP)" => "PUNTO DE VENTA",
-            "PUNTO DE VENTA" => "PUNTO DE VENTA",
-            "TELEFONO" => "PUNTO DE VENTA",
-            "ACCESS POINT" => "TELCO",
-            "GABINETE P/EQ. COMUNICACION TIENDA" => "TELCO",
-            "RUTEADOR DE COMUNICACION" => "TELCO",
-            "SWITCH RED LOCAL" => "TELCO",
-            "TELECOMUNICACIONES TIENDA" => "TELCO",
+        $conflicts = [
+            'placa' => [],
+            'activo' => [],
+            'serie' => [],
         ];
 
-        // Normalizar el mapeo
-        $normalizedMap = [];
-        foreach ($descripcionMap as $descripcion => $categoria) {
-            $key = TextNorm::key($descripcion);
-            $normalizedMap[$key] = $categoria;
+        $duplicates = [
+            'placa' => [],
+            'activo' => [],
+            'serie' => [],
+        ];
+
+        $identifiers = ['placa', 'activo', 'serie'];
+
+        foreach ($identifiers as $identifier) {
+            // Query para encontrar conflictos y duplicados
+            $results = DB::table('maf')
+                ->select(
+                    $identifier . ' as value',
+                    DB::raw('COUNT(*) as rows_count'),
+                    DB::raw('COUNT(DISTINCT cr) as tiendas_distintas'),
+                    DB::raw('COUNT(DISTINCT plaza) as plazas_distintas')
+                )
+                ->where('batch_id', $batchId)
+                ->whereNotNull($identifier)
+                ->where($identifier, '!=', '')
+                ->groupBy($identifier)
+                ->havingRaw('COUNT(*) > 1')
+                ->get();
+
+            foreach ($results as $result) {
+                $value = $result->value;
+                $rowsCount = $result->rows_count;
+                $tiendasDistintas = $result->tiendas_distintas;
+                $plazasDistintas = $result->plazas_distintas;
+
+                // Obtener ocurrencias
+                $occurrences = DB::table('maf')
+                    ->select('row_num', 'plaza', 'cr', 'tienda', 'descripcion', 'marca', 'modelo')
+                    ->where('batch_id', $batchId)
+                    ->where($identifier, $value)
+                    ->orderBy('row_num')
+                    ->get()
+                    ->toArray();
+
+                $item = [
+                    'value' => $value,
+                    'rows_count' => $rowsCount,
+                    'tiendas_distintas' => $tiendasDistintas,
+                    'plazas_distintas' => $plazasDistintas,
+                    'occurrences' => $occurrences,
+                ];
+
+                if ($tiendasDistintas > 1) {
+                    // CONFLICTO GRAVE: mismo identificador en 2+ tiendas distintas
+                    $conflicts[$identifier][] = $item;
+                } else {
+                    // DUPLICADO SIMPLE: mismo identificador repetido en la misma tienda
+                    $duplicates[$identifier][] = $item;
+                }
+            }
         }
 
-        return $normalizedMap;
+        return [
+            'conflicts' => $conflicts,
+            'duplicates' => $duplicates,
+        ];
     }
 }
 

@@ -53,9 +53,3 @@ class NewPasswordController extends Controller
 
 
 
-
-
-
-
-
-

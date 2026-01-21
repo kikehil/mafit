@@ -423,9 +423,3 @@ sudo crontab -e
 0 2 * * * /usr/local/bin/backup-mafit.sh >> /var/log/mafit-backup.log 2>&1
 ```
 
-
-
-
-
-
-

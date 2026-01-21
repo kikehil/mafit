@@ -48,11 +48,11 @@ class UpdateMafCategoriesCommand extends Command
         "MONITOR P/PUNTO DE VENTA (HP)" => "PUNTO DE VENTA",
         "PUNTO DE VENTA" => "PUNTO DE VENTA",
         "TELEFONO" => "PUNTO DE VENTA",
-        "ACCESS POINT" => "TELCO",
-        "GABINETE P/EQ. COMUNICACION TIENDA" => "TELCO",
-        "RUTEADOR DE COMUNICACION" => "TELCO",
-        "SWITCH RED LOCAL" => "TELCO",
-        "TELECOMUNICACIONES TIENDA" => "TELCO",
+        "ACCESS POINT" => "telco",
+        "GABINETE P/EQ. COMUNICACION TIENDA" => "telco",
+        "RUTEADOR DE COMUNICACION" => "telco",
+        "SWITCH RED LOCAL" => "telco",
+        "TELECOMUNICACIONES TIENDA" => "telco",
     ];
 
     /**

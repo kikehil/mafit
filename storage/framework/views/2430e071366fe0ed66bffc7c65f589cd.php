@@ -1,3 +1,5 @@
+
+
 <?php $__env->startSection('title', 'Consulta Inventario'); ?>
 <?php $__env->startSection('page-title', 'Consulta Inventario'); ?>
 

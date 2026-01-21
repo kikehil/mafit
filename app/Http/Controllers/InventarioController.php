@@ -46,105 +46,6 @@ class InventarioController extends Controller
     }
 
     /**
-     * Agregar nuevo equipo a una tienda
-     */
-    public function agregarEquipo(Request $request)
-    {
-        $request->validate([
-            'cr' => 'required|string',
-            'plaza' => 'nullable|string',
-            'placa' => 'required|string|max:100',
-            'marca' => 'required|string|max:100',
-            'modelo' => 'required|string|max:100',
-            'serie' => 'required|string|max:100',
-        ]);
-
-        try {
-            // Obtener el último batch "done"
-            $lastBatch = DB::table('maf_import_batches')
-                ->where('status', 'done')
-                ->orderBy('finished_at', 'desc')
-                ->first();
-
-            if (!$lastBatch) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No hay lotes procesados disponibles.',
-                ], 400);
-            }
-
-            // Obtener información de la tienda desde un equipo existente o crear valores por defecto
-            $equipoExistente = Maf::where('cr', $request->cr)
-                ->where(function ($q) use ($request) {
-                    if ($request->plaza) {
-                        $q->where('plaza', $request->plaza);
-                    }
-                })
-                ->first();
-
-            $tiendaNombre = $equipoExistente->tienda ?? '';
-            $plaza = $request->plaza ?? ($equipoExistente->plaza ?? null);
-
-            // Verificar si ya existe un equipo con la misma placa en la misma tienda
-            $equipoDuplicado = Maf::where('cr', $request->cr)
-                ->where('placa', $request->placa)
-                ->where(function ($q) use ($plaza) {
-                    if ($plaza) {
-                        $q->where('plaza', $plaza);
-                    } else {
-                        $q->whereNull('plaza');
-                    }
-                })
-                ->first();
-
-            if ($equipoDuplicado) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Ya existe un equipo con la placa ' . $request->placa . ' en esta tienda.',
-                ], 400);
-            }
-
-            // Crear nuevo equipo en MAF
-            $nuevoEquipo = Maf::create([
-                'batch_id' => $lastBatch->id,
-                'row_num' => 0, // Equipos agregados manualmente tienen row_num 0
-                'plaza' => $plaza,
-                'cr' => $request->cr,
-                'tienda' => $tiendaNombre,
-                'placa' => $request->placa,
-                'marca' => $request->marca,
-                'modelo' => $request->modelo,
-                'serie' => $request->serie,
-                'descripcion' => $request->marca . ' ' . $request->modelo, // Descripción por defecto
-                'categoria' => null, // Se puede categorizar después
-                'activo' => null,
-                'mescompra' => null,
-                'anocompra' => null,
-                'valor_neto' => null,
-                'remanente' => null,
-                'imported_at' => now(),
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Equipo agregado exitosamente.',
-                'equipo' => [
-                    'id' => $nuevoEquipo->id,
-                    'placa' => $nuevoEquipo->placa,
-                    'marca' => $nuevoEquipo->marca,
-                    'modelo' => $nuevoEquipo->modelo,
-                    'serie' => $nuevoEquipo->serie,
-                ],
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al agregar el equipo: ' . $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
      * Buscar tienda por CR o nombre
      */
     public function buscarTienda(Request $request)
@@ -208,13 +109,11 @@ class InventarioController extends Controller
             ]);
         }
 
-        // Obtener equipos de la tienda (incluyendo los agregados manualmente y los sin categoría)
-        $query = Maf::where(function ($q) use ($lastBatch) {
-                $q->where('batch_id', $lastBatch->id)
-                  ->orWhere('row_num', 0); // Incluir equipos agregados manualmente
-            })
-            ->where('cr', $cr);
-            // Nota: No filtramos por categoría para incluir equipos sin categoría
+        // Obtener equipos de la tienda que tengan categoría
+        $query = Maf::where('batch_id', $lastBatch->id)
+            ->where('cr', $cr)
+            ->whereNotNull('categoria')
+            ->where('categoria', '!=', '');
 
         if ($plaza) {
             $query->where('plaza', $plaza);
@@ -227,16 +126,13 @@ class InventarioController extends Controller
         $ordenCategorias = [
             'PUNTO DE VENTA' => 1,
             'MOVILIDAD' => 2,
-            'TELCO' => 3,
+            'telco' => 3,
             'ENERGIA' => 4,
             'CCTV' => 5,
-            'SIN CATEGORÍA' => 999, // Sin categoría al final
         ];
 
-        // Agrupar por categoría (incluyendo null como "Sin categoría")
-        $equiposPorCategoria = $equipos->groupBy(function ($equipo) {
-            return $equipo->categoria ?: 'Sin categoría';
-        });
+        // Agrupar por categoría
+        $equiposPorCategoria = $equipos->groupBy('categoria');
 
         // Obtener información de la tienda
         $tiendaInfo = $equipos->first();
@@ -343,12 +239,7 @@ class InventarioController extends Controller
         
         // Ordenar categorías según el orden especificado
         $categoriasOrdenadas = $equiposPorCategoria->keys()->sortBy(function ($categoria) use ($ordenCategorias) {
-            $categoriaUpper = strtoupper($categoria);
-            // Manejar "Sin categoría" específicamente
-            if ($categoriaUpper === 'SIN CATEGORÍA' || $categoriaUpper === 'SIN CATEGORIA') {
-                return 999;
-            }
-            return $ordenCategorias[$categoriaUpper] ?? 998;
+            return $ordenCategorias[strtoupper($categoria)] ?? 999;
         });
         
         foreach ($categoriasOrdenadas as $categoria) {
@@ -591,10 +482,16 @@ class InventarioController extends Controller
         $plaza = $request->input('plaza');
         $categoriaFiltro = $request->input('categoria');
 
-        // Obtener equipos desde inventariotda con relación a maf (incluyendo equipos agregados manualmente)
+        // Obtener equipos desde inventariotda con relación a maf
         $query = Inventariotda::where('cr', $cr)
-            ->with(['maf'])
-            ->whereHas('maf');
+            ->with(['maf' => function ($q) {
+                $q->whereNotNull('categoria')
+                  ->where('categoria', '!=', '');
+            }])
+            ->whereHas('maf', function ($q) {
+                $q->whereNotNull('categoria')
+                  ->where('categoria', '!=', '');
+            });
 
         // Filtrar por plaza si se proporciona
         if ($plaza) {
@@ -724,16 +621,13 @@ class InventarioController extends Controller
         $ordenCategorias = [
             'PUNTO DE VENTA' => 1,
             'MOVILIDAD' => 2,
-            'TELCO' => 3,
+            'telco' => 3,
             'ENERGIA' => 4,
             'CCTV' => 5,
-            'SIN CATEGORÍA' => 999, // Sin categoría al final
         ];
 
-        // Agrupar por categoría (incluyendo null como "Sin categoría")
-        $equiposPorCategoria = $equipos->groupBy(function ($equipo) {
-            return $equipo->categoria ?: 'Sin categoría';
-        });
+        // Agrupar por categoría
+        $equiposPorCategoria = $equipos->groupBy('categoria');
 
         // Obtener información de la tienda
         $primerInventario = $inventarios->first();
@@ -750,7 +644,10 @@ class InventarioController extends Controller
         // Obtener todas las categorías disponibles para el filtro (de todos los inventarios de la tienda, no solo los filtrados)
         $queryCategorias = Inventariotda::where('cr', $cr)
             ->with('maf')
-            ->whereHas('maf');
+            ->whereHas('maf', function ($q) {
+                $q->whereNotNull('categoria')
+                  ->where('categoria', '!=', '');
+            });
         
         if ($plaza) {
             $queryCategorias->whereHas('maf', function ($q) use ($plaza) {
@@ -769,12 +666,7 @@ class InventarioController extends Controller
         
         // Ordenar categorías según el orden especificado
         $categoriasOrdenadas = $equiposPorCategoria->keys()->sortBy(function ($categoria) use ($ordenCategorias) {
-            $categoriaUpper = strtoupper($categoria);
-            // Manejar "Sin categoría" específicamente
-            if ($categoriaUpper === 'SIN CATEGORÍA' || $categoriaUpper === 'SIN CATEGORIA') {
-                return 999;
-            }
-            return $ordenCategorias[$categoriaUpper] ?? 998;
+            return $ordenCategorias[strtoupper($categoria)] ?? 999;
         });
         
         foreach ($categoriasOrdenadas as $categoria) {
