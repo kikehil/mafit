@@ -23,6 +23,8 @@ class Inventariotda extends Model
         'seguimiento',
         'en_garantia',
         'fecha_inventario',
+        'foto1',
+        'foto2',
     ];
 
     protected $casts = [

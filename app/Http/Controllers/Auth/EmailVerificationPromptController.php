@@ -25,3 +25,10 @@ class EmailVerificationPromptController extends Controller
 
 
 
+
+
+
+
+
+
+

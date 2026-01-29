@@ -65,9 +65,10 @@
                     <button 
                         type="submit" 
                         id="btnCerrarInventario"
-                        class="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 font-semibold text-lg"
+                        class="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Cerrar Inventario
+                        <span id="btnText">Cerrar Inventario</span>
+                        <span id="btnLoading" class="hidden">Guardando...</span>
                     </button>
                 </div>
             </form>
@@ -536,30 +537,103 @@ function crearFilaEquipo(equipo) {
                         data-campo="serie"
                     >
                 </div>
-                <div class="flex items-center justify-end gap-4 mt-3 pt-3 border-t border-gray-200">
-                    <label class="text-sm font-medium text-gray-700">Estado:</label>
+                <div class="flex items-center justify-between gap-4 mt-3 pt-3 border-t border-gray-200">
+                    <div class="flex-1">
+                        <label class="text-sm font-medium text-gray-700 mb-2 block">Fotos (máx. 2):</label>
+                        <div class="flex gap-2">
+                            <div class="flex-1">
+                                <input 
+                                    type="file" 
+                                    name="equipos[${equipo.id}][foto1]"
+                                    accept="image/*"
+                                    class="foto-input hidden"
+                                    id="foto1_${equipo.id}"
+                                    data-maf-id="${equipo.id}"
+                                    data-foto-num="1"
+                                    onchange="previewFoto(this, '${equipo.id}', 1)"
+                                >
+                                <label 
+                                    for="foto1_${equipo.id}" 
+                                    class="cursor-pointer inline-flex items-center justify-center px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 w-full"
+                                >
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    Foto 1
+                                </label>
+                                <div id="preview_foto1_${equipo.id}" class="mt-2 hidden">
+                                    <div id="loading_foto1_${equipo.id}" class="text-xs text-blue-600 mb-1">Comprimiendo imagen...</div>
+                                    <img id="img_foto1_${equipo.id}" src="" alt="Preview" class="w-full h-24 object-cover rounded-lg border border-gray-300">
+                                    <button 
+                                        type="button" 
+                                        onclick="eliminarFoto('${equipo.id}', 1)"
+                                        class="mt-1 text-xs text-red-600 hover:text-red-800"
+                                    >
+                                        Eliminar
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <input 
+                                    type="file" 
+                                    name="equipos[${equipo.id}][foto2]"
+                                    accept="image/*"
+                                    class="foto-input hidden"
+                                    id="foto2_${equipo.id}"
+                                    data-maf-id="${equipo.id}"
+                                    data-foto-num="2"
+                                    onchange="previewFoto(this, '${equipo.id}', 2)"
+                                >
+                                <label 
+                                    for="foto2_${equipo.id}" 
+                                    class="cursor-pointer inline-flex items-center justify-center px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 w-full"
+                                >
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    Foto 2
+                                </label>
+                                <div id="preview_foto2_${equipo.id}" class="mt-2 hidden">
+                                    <div id="loading_foto2_${equipo.id}" class="text-xs text-blue-600 mb-1">Comprimiendo imagen...</div>
+                                    <img id="img_foto2_${equipo.id}" src="" alt="Preview" class="w-full h-24 object-cover rounded-lg border border-gray-300">
+                                    <button 
+                                        type="button" 
+                                        onclick="eliminarFoto('${equipo.id}', 2)"
+                                        class="mt-1 text-xs text-red-600 hover:text-red-800"
+                                    >
+                                        Eliminar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="flex items-center gap-4">
-                        <label class="flex items-center cursor-pointer">
-                            <input 
-                                type="radio" 
-                                name="equipos[${equipo.id}][estado]"
-                                value="check"
-                                checked
-                                class="estado-radio w-5 h-5 text-green-600 border-gray-300 focus:ring-green-500"
-                                onchange="toggleInputs(this, '${equipo.id}')"
-                            >
-                            <span class="ml-2 text-lg text-green-600 font-semibold">✓</span>
-                        </label>
-                        <label class="flex items-center cursor-pointer">
-                            <input 
-                                type="radio" 
-                                name="equipos[${equipo.id}][estado]"
-                                value="x"
-                                class="estado-radio w-5 h-5 text-red-600 border-gray-300 focus:ring-red-500"
-                                onchange="toggleInputs(this, '${equipo.id}')"
-                            >
-                            <span class="ml-2 text-lg text-red-600 font-semibold">✗</span>
-                        </label>
+                        <label class="text-sm font-medium text-gray-700">Estado:</label>
+                        <div class="flex items-center gap-4">
+                            <label class="flex items-center cursor-pointer">
+                                <input 
+                                    type="radio" 
+                                    name="equipos[${equipo.id}][estado]"
+                                    value="check"
+                                    checked
+                                    class="estado-radio w-5 h-5 text-green-600 border-gray-300 focus:ring-green-500"
+                                    onchange="toggleInputs(this, '${equipo.id}')"
+                                >
+                                <span class="ml-2 text-lg text-green-600 font-semibold">✓</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer">
+                                <input 
+                                    type="radio" 
+                                    name="equipos[${equipo.id}][estado]"
+                                    value="x"
+                                    class="estado-radio w-5 h-5 text-red-600 border-gray-300 focus:ring-red-500"
+                                    onchange="toggleInputs(this, '${equipo.id}')"
+                                >
+                                <span class="ml-2 text-lg text-red-600 font-semibold">✗</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -632,6 +706,142 @@ document.addEventListener('input', function(e) {
     }
 });
 
+// Funciones para manejar fotos con compresión
+function previewFoto(input, mafId, fotoNum) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const previewDiv = document.getElementById(`preview_foto${fotoNum}_${mafId}`);
+        const loadingDiv = document.getElementById(`loading_foto${fotoNum}_${mafId}`);
+        
+        // Mostrar indicador de carga
+        previewDiv.classList.remove('hidden');
+        if (loadingDiv) {
+            loadingDiv.classList.remove('hidden');
+        }
+        
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                // Configuración de compresión optimizada para velocidad
+                const MAX_WIDTH = 1600; // Ancho máximo (reducido para mayor velocidad)
+                const MAX_HEIGHT = 1600; // Alto máximo
+                const QUALITY = 0.70; // Calidad JPEG (balance entre calidad y tamaño)
+                
+                // Calcular nuevas dimensiones manteniendo proporción
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+                    if (width > height) {
+                        height = (height * MAX_WIDTH) / width;
+                        width = MAX_WIDTH;
+                    } else {
+                        width = (width * MAX_HEIGHT) / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+                
+                // Crear canvas para redimensionar y comprimir
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                
+                // Mejorar calidad de renderizado
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Convertir a blob comprimido
+                canvas.toBlob(function(blob) {
+                    if (blob) {
+                        // Crear un nuevo File con el blob comprimido
+                        const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.jpg'), {
+                            type: 'image/jpeg',
+                            lastModified: Date.now()
+                        });
+                        
+                        // Crear un DataTransfer para reemplazar el archivo en el input
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(compressedFile);
+                        input.files = dataTransfer.files;
+                        
+                        // Mostrar preview
+                        const previewImg = document.getElementById(`img_foto${fotoNum}_${mafId}`);
+                        const blobUrl = URL.createObjectURL(blob);
+                        previewImg.src = blobUrl;
+                        
+                        // Ocultar indicador de carga
+                        if (loadingDiv) {
+                            loadingDiv.classList.add('hidden');
+                        }
+                        
+                        // Mostrar información de compresión
+                        const originalSize = (file.size / 1024 / 1024).toFixed(2);
+                        const compressedSize = (blob.size / 1024 / 1024).toFixed(2);
+                        const reduction = ((1 - blob.size / file.size) * 100).toFixed(0);
+                        
+                        // Actualizar o crear indicador de tamaño
+                        let sizeInfo = previewDiv.querySelector('.size-info');
+                        if (!sizeInfo) {
+                            sizeInfo = document.createElement('div');
+                            sizeInfo.className = 'size-info text-xs text-gray-500 mt-1';
+                            previewDiv.appendChild(sizeInfo);
+                        }
+                        sizeInfo.textContent = `${compressedSize} MB (reducido ${reduction}%)`;
+                    } else {
+                        // Si falla la compresión, usar imagen original
+                        if (loadingDiv) {
+                            loadingDiv.classList.add('hidden');
+                        }
+                        mostrarModal('Advertencia', 'No se pudo comprimir la imagen. Se usará la imagen original.', 'info');
+                    }
+                }, 'image/jpeg', QUALITY);
+            };
+            img.onerror = function() {
+                if (loadingDiv) {
+                    loadingDiv.classList.add('hidden');
+                }
+                mostrarModal('Error', 'Error al cargar la imagen. Por favor intente con otra imagen.', 'error');
+                input.value = '';
+                previewDiv.classList.add('hidden');
+            };
+            img.src = e.target.result;
+        };
+        reader.onerror = function() {
+            if (loadingDiv) {
+                loadingDiv.classList.add('hidden');
+            }
+            mostrarModal('Error', 'Error al leer el archivo. Por favor intente nuevamente.', 'error');
+            input.value = '';
+            previewDiv.classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function eliminarFoto(mafId, fotoNum) {
+    const input = document.getElementById(`foto${fotoNum}_${mafId}`);
+    const previewDiv = document.getElementById(`preview_foto${fotoNum}_${mafId}`);
+    
+    // Liberar URL del objeto si existe
+    const previewImg = document.getElementById(`img_foto${fotoNum}_${mafId}`);
+    if (previewImg && previewImg.src.startsWith('blob:')) {
+        URL.revokeObjectURL(previewImg.src);
+    }
+    
+    input.value = '';
+    previewDiv.classList.add('hidden');
+    
+    // Limpiar información de tamaño
+    const sizeInfo = previewDiv.querySelector('.size-info');
+    if (sizeInfo) {
+        sizeInfo.remove();
+    }
+}
+
 // Guardar inventario
 document.getElementById('inventarioForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -669,7 +879,12 @@ document.getElementById('inventarioForm').addEventListener('submit', function(e)
 });
 
 function recopilarYEnviarDatos() {
-    const equipos = [];
+    // Crear FormData para enviar archivos
+    const formData = new FormData();
+    
+    formData.append('cr', tiendaSeleccionada.cr);
+    formData.append('plaza', tiendaSeleccionada.plaza || '');
+    formData.append('notas', document.getElementById('notas').value.trim() || '');
     
     // Recopilar datos de TODOS los equipos desde equiposData (no solo los visibles en el DOM)
     equiposData.categorias.forEach(categoriaData => {
@@ -721,6 +936,17 @@ function recopilarYEnviarDatos() {
                     if (!valoresEditados[mafId]) valoresEditados[mafId] = {};
                     valoresEditados[mafId].serie = serieValor;
                 }
+                
+                // Agregar fotos si existen
+                const foto1Input = equipoDiv.querySelector('input[name*="[foto1]"]');
+                const foto2Input = equipoDiv.querySelector('input[name*="[foto2]"]');
+                
+                if (foto1Input && foto1Input.files && foto1Input.files[0]) {
+                    formData.append(`equipos[${mafId}][foto1]`, foto1Input.files[0]);
+                }
+                if (foto2Input && foto2Input.files && foto2Input.files[0]) {
+                    formData.append(`equipos[${mafId}][foto2]`, foto2Input.files[0]);
+                }
             }
             
             // Si no está visible o no se encontró en el DOM, usar valores guardados en memoria
@@ -732,38 +958,46 @@ function recopilarYEnviarDatos() {
                 serieValor = (valoresEditados[mafId].serie || '').trim();
             }
             
-            // Si el estado es 'x', siempre guardar los valores actuales (editados)
-            // Si el estado es 'check', guardar null (no se guardan valores editados cuando está en check)
-            equipos.push({
-                maf_id: mafId,
-                estado: estado,
-                placa_editada: estado === 'x' ? (placaValor || null) : null,
-                marca_editada: estado === 'x' ? (marcaValor || null) : null,
-                modelo_editado: estado === 'x' ? (modeloValor || null) : null,
-                serie_editada: estado === 'x' ? (serieValor || null) : null,
-            });
+            // Agregar datos del equipo al FormData
+            formData.append(`equipos[${mafId}][maf_id]`, mafId);
+            formData.append(`equipos[${mafId}][estado]`, estado);
+            formData.append(`equipos[${mafId}][placa_editada]`, estado === 'x' ? (placaValor || '') : '');
+            formData.append(`equipos[${mafId}][marca_editada]`, estado === 'x' ? (marcaValor || '') : '');
+            formData.append(`equipos[${mafId}][modelo_editado]`, estado === 'x' ? (modeloValor || '') : '');
+            formData.append(`equipos[${mafId}][serie_editada]`, estado === 'x' ? (serieValor || '') : '');
         });
     });
     
-    const notas = document.getElementById('notas').value.trim();
+    // Debug: mostrar cantidad de equipos
+    console.log('Total equipos a enviar:', equiposData.categorias.reduce((total, cat) => total + cat.equipos.length, 0));
     
-    const data = {
-        cr: tiendaSeleccionada.cr,
-        plaza: tiendaSeleccionada.plaza,
-        notas: notas || null,
-        equipos: equipos
-    };
+    // Deshabilitar botón y mostrar indicador de carga
+    const btnSubmit = document.getElementById('btnCerrarInventario');
+    const btnText = document.getElementById('btnText');
+    const btnLoading = document.getElementById('btnLoading');
+    btnSubmit.disabled = true;
+    btnText.classList.add('hidden');
+    btnLoading.classList.remove('hidden');
     
     fetch('{{ route("inventario.guardar") }}', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
             'X-CSRF-TOKEN': '{{ csrf_token() }}'
         },
-        body: JSON.stringify(data)
+        body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
+        // Restaurar botón
+        btnSubmit.disabled = false;
+        btnText.classList.remove('hidden');
+        btnLoading.classList.add('hidden');
+        
         if (data.success) {
             mostrarModal('Éxito', 'Inventario guardado exitosamente', 'success');
             // Recargar después de 1.5 segundos
@@ -775,8 +1009,14 @@ function recopilarYEnviarDatos() {
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        mostrarModal('Error', 'Error al guardar el inventario. Por favor intente nuevamente.', 'error');
+        // Restaurar botón
+        btnSubmit.disabled = false;
+        btnText.classList.remove('hidden');
+        btnLoading.classList.add('hidden');
+        
+        console.error('Error completo:', error);
+        console.error('Stack:', error.stack);
+        mostrarModal('Error', 'Error al guardar el inventario: ' + error.message + '. Por favor intente nuevamente.', 'error');
     });
 }
 </script>

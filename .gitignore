@@ -17,6 +17,46 @@ yarn-error.log
 /.idea
 /.vscode
 
+# Backups y archivos SQL
+/backups/*.sql
+*.sql
+mafit_backup*.sql
+
+# Logs
+/storage/logs/*.log
+*.log
+
+# Archivos compilados de Laravel
+/storage/framework/views/*.php
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/bootstrap/cache/*
+
+# Archivos temporales
+*.tmp
+*.temp
+Thumbs.db
+.DS_Store
+~$*
+
+# Archivos de configuración local
+DB_HOST
+DB_PASSWORD
+DB_USERNAME
+.env.local
+
+# Archivos comprimidos
+*.zip
+*.rar
+*.tar.gz
+
+
+
+
+
+
+
+
 
 
 

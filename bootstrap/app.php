@@ -14,6 +14,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'module' => \App\Http\Middleware\CheckModulePermission::class,
         ]);
+        
+        // Configurar TrustProxies para detectar HTTPS correctamente
+        $middleware->trustProxies(at: '*');
+        $middleware->trustHosts(at: ['*']);
+        
+        // Agregar middleware para forzar HTTPS cuando sea necesario (al inicio del stack)
+        $middleware->web(prepend: [
+            \App\Http\Middleware\ForceHttps::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

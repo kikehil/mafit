@@ -12,6 +12,11 @@
 
     RewriteEngine On
 
+    # Detectar HTTPS desde proxy/load balancer
+    RewriteCond %{HTTP:X-Forwarded-Proto} =https [OR]
+    RewriteCond %{HTTPS} =on
+    RewriteRule .* - [E=HTTPS:on]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

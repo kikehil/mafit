@@ -17,7 +17,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Variables configurables
-PROJECT_DIR="/var/www/mafit"
+PROJECT_DIR="/var/www/html/mafit"
 DOMAIN=""
 DB_NAME="mafit"
 DB_USER="mafit_user"
@@ -301,6 +301,13 @@ echo "  3. Verifica los logs si hay problemas:"
 echo "     tail -f ${PROJECT_DIR}/storage/logs/laravel.log"
 echo ""
 print_success "¡Listo para usar!"
+
+
+
+
+
+
+
 
 
 

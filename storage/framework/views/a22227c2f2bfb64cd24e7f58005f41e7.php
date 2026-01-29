@@ -12,6 +12,21 @@
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
     <!-- Scripts -->
+    <?php
+        // Detectar HTTPS y forzar esquema antes de que Vite genere las URLs
+        $isSecure = request()->isSecure() || 
+                    str_starts_with(request()->url(), 'https://') ||
+                    request()->header('X-Forwarded-Proto') === 'https' ||
+                    (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+        
+        if ($isSecure) {
+            URL::forceScheme('https');
+            $appUrl = config('app.url');
+            if ($appUrl && str_starts_with($appUrl, 'http://')) {
+                config(['app.url' => str_replace('http://', 'https://', $appUrl)]);
+            }
+        }
+    ?>
     <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css', 'resources/js/app.js']); ?>
     
     <script>
@@ -324,7 +339,7 @@
                             <p class="text-xs text-gray-400 truncate"><?php echo e(Auth::user()->email); ?></p>
                         </div>
                     </div>
-                    <form method="POST" action="<?php echo e(route('logout')); ?>" class="mt-3">
+                    <form method="POST" action="<?php echo e(url('/logout')); ?>" class="mt-3">
                         <?php echo csrf_field(); ?>
                         <button type="submit" class="w-full flex items-center justify-center px-4 py-2 text-sm text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

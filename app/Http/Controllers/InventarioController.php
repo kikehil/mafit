@@ -11,6 +11,7 @@ use App\Mail\InventarioNotificacionMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 class InventarioController extends Controller
 {
@@ -339,6 +340,8 @@ class InventarioController extends Controller
             'equipos.*.marca_editada' => 'nullable|string|max:100',
             'equipos.*.modelo_editado' => 'nullable|string|max:100',
             'equipos.*.serie_editada' => 'nullable|string|max:100',
+            'equipos.*.foto1' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:2048', // 2MB máximo (ya viene comprimido del cliente)
+            'equipos.*.foto2' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:2048', // 2MB máximo (ya viene comprimido del cliente)
         ]);
 
         $cr = $request->input('cr');
@@ -347,9 +350,25 @@ class InventarioController extends Controller
         $equipos = $request->input('equipos');
         $fechaInventario = now();
 
+        // Validar que equipos no esté vacío
+        if (empty($equipos) || !is_array($equipos)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se recibieron equipos para guardar.',
+            ], 400);
+        }
+
         // Obtener información de la tienda del primer equipo
-        $primerEquipo = Maf::find($equipos[0]['maf_id']);
-        $tiendaNombre = $primerEquipo->tienda ?? '';
+        // Con FormData, los equipos vienen como array asociativo con maf_id como clave
+        $tiendaNombre = '';
+        $primerEquipoData = reset($equipos);
+        if ($primerEquipoData && is_array($primerEquipoData) && isset($primerEquipoData['maf_id'])) {
+            $primerMafId = $primerEquipoData['maf_id'];
+            $primerEquipo = Maf::find($primerMafId);
+            if ($primerEquipo) {
+                $tiendaNombre = $primerEquipo->tienda ?? '';
+            }
+        }
 
         DB::beginTransaction();
         try {
@@ -357,24 +376,92 @@ class InventarioController extends Controller
             $fechaInventarioNormalizada = $fechaInventario->copy()->startOfDay();
             
             foreach ($equipos as $equipoData) {
-                Inventariotda::updateOrCreate(
+                // Con FormData, los datos vienen como array asociativo
+                if (!is_array($equipoData) || !isset($equipoData['maf_id'])) {
+                    \Log::warning('Equipo sin datos válidos: ' . json_encode($equipoData));
+                    continue; // Saltar si no hay datos válidos
+                }
+                
+                $mafId = (int) $equipoData['maf_id'];
+                if (!$mafId) {
+                    \Log::warning('Maf ID inválido: ' . ($equipoData['maf_id'] ?? 'null'));
+                    continue;
+                }
+                
+                $placaEditada = !empty($equipoData['placa_editada']) ? trim($equipoData['placa_editada']) : null;
+                
+                // Obtener la placa para nombrar las fotos (usar placa_editada si existe, sino la original)
+                $equipoMaf = Maf::find($mafId);
+                $placaParaNombre = $placaEditada ?: ($equipoMaf->placa ?? 'sin_placa');
+                
+                // Limpiar la placa para usar como nombre de archivo (remover caracteres especiales)
+                $placaLimpia = preg_replace('/[^a-zA-Z0-9]/', '_', $placaParaNombre);
+                
+                // Buscar inventario existente para preservar fotos si no se suben nuevas
+                $inventarioExistente = Inventariotda::where('maf_id', $mafId)
+                    ->where('fecha_inventario', $fechaInventarioNormalizada)
+                    ->first();
+                
+                $foto1Path = $inventarioExistente->foto1 ?? null;
+                $foto2Path = $inventarioExistente->foto2 ?? null;
+                
+                // Procesar foto1 si existe
+                if ($request->hasFile("equipos.{$mafId}.foto1")) {
+                    // Eliminar foto anterior si existe
+                    if ($foto1Path && Storage::disk('public')->exists($foto1Path)) {
+                        Storage::disk('public')->delete($foto1Path);
+                    }
+                    $foto1 = $request->file("equipos.{$mafId}.foto1");
+                    $extension1 = $foto1->getClientOriginalExtension();
+                    $nombreFoto1 = $placaLimpia . '_1.' . $extension1;
+                    $foto1Path = $foto1->storeAs('inventario_fotos', $nombreFoto1, 'public');
+                    \Log::info("Foto1 guardada para maf_id {$mafId}: {$foto1Path}");
+                }
+                
+                // Procesar foto2 si existe
+                if ($request->hasFile("equipos.{$mafId}.foto2")) {
+                    // Eliminar foto anterior si existe
+                    if ($foto2Path && Storage::disk('public')->exists($foto2Path)) {
+                        Storage::disk('public')->delete($foto2Path);
+                    }
+                    $foto2 = $request->file("equipos.{$mafId}.foto2");
+                    $extension2 = $foto2->getClientOriginalExtension();
+                    $nombreFoto2 = $placaLimpia . '_2.' . $extension2;
+                    $foto2Path = $foto2->storeAs('inventario_fotos', $nombreFoto2, 'public');
+                    \Log::info("Foto2 guardada para maf_id {$mafId}: {$foto2Path}");
+                }
+                
+                \Log::info("Guardando inventario para maf_id {$mafId} con foto1: " . ($foto1Path ?? 'null') . " y foto2: " . ($foto2Path ?? 'null'));
+                
+                $inventarioGuardado = Inventariotda::updateOrCreate(
                     [
-                        'maf_id' => $equipoData['maf_id'],
+                        'maf_id' => $mafId,
                         'fecha_inventario' => $fechaInventarioNormalizada,
                     ],
                     [
                         'user_id' => auth()->id(),
                         'cr' => $cr,
                         'tienda' => $tiendaNombre,
-                        'placa_editada' => $equipoData['placa_editada'] ?? null,
-                        'marca_editada' => $equipoData['marca_editada'] ?? null,
-                        'modelo_editado' => $equipoData['modelo_editado'] ?? null,
-                        'serie_editada' => $equipoData['serie_editada'] ?? null,
-                        'notas' => $notas,
-                        'estado' => $equipoData['estado'],
+                        'placa_editada' => $placaEditada,
+                        'marca_editada' => !empty($equipoData['marca_editada']) ? trim($equipoData['marca_editada']) : null,
+                        'modelo_editado' => !empty($equipoData['modelo_editado']) ? trim($equipoData['modelo_editado']) : null,
+                        'serie_editada' => !empty($equipoData['serie_editada']) ? trim($equipoData['serie_editada']) : null,
+                        'notas' => !empty($notas) ? trim($notas) : null,
+                        'estado' => $equipoData['estado'] ?? 'check',
                         'fecha_inventario' => $fechaInventarioNormalizada,
+                        'foto1' => $foto1Path,
+                        'foto2' => $foto2Path,
                     ]
                 );
+                
+                // Forzar actualización de fotos si es necesario (para asegurar que se guarden)
+                if ($foto1Path !== null || $foto2Path !== null) {
+                    $inventarioGuardado->foto1 = $foto1Path;
+                    $inventarioGuardado->foto2 = $foto2Path;
+                    $inventarioGuardado->save();
+                }
+                
+                \Log::info("Inventario guardado ID: {$inventarioGuardado->id}, foto1 en BD: " . ($inventarioGuardado->fresh()->foto1 ?? 'null') . ", foto2 en BD: " . ($inventarioGuardado->fresh()->foto2 ?? 'null'));
             }
 
             DB::commit();
@@ -408,6 +495,9 @@ class InventarioController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Error al guardar inventario: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            \Log::error('Equipos recibidos: ' . json_encode($equipos));
             return response()->json([
                 'success' => false,
                 'message' => 'Error al guardar el inventario: ' . $e->getMessage(),
@@ -514,6 +604,32 @@ class InventarioController extends Controller
                 return null;
             }
             
+            // Obtener URLs de las fotos si existen
+            $foto1Url = null;
+            $foto2Url = null;
+            if ($inventario->foto1) {
+                // Verificar si el archivo existe
+                if (Storage::disk('public')->exists($inventario->foto1)) {
+                    // Usar URL relativa o detectar protocolo automáticamente
+                    $baseUrl = request()->getSchemeAndHttpHost();
+                    $foto1Url = $baseUrl . '/storage/' . $inventario->foto1;
+                } else {
+                    // Log para depuración
+                    \Log::warning("Foto1 no encontrada: {$inventario->foto1} para inventario ID: {$inventario->id}");
+                }
+            }
+            if ($inventario->foto2) {
+                // Verificar si el archivo existe
+                if (Storage::disk('public')->exists($inventario->foto2)) {
+                    // Usar URL relativa o detectar protocolo automáticamente
+                    $baseUrl = request()->getSchemeAndHttpHost();
+                    $foto2Url = $baseUrl . '/storage/' . $inventario->foto2;
+                } else {
+                    // Log para depuración
+                    \Log::warning("Foto2 no encontrada: {$inventario->foto2} para inventario ID: {$inventario->id}");
+                }
+            }
+            
             return (object) [
                 'id' => $maf->id,
                 'inventario_id' => $inventario->id,
@@ -526,6 +642,8 @@ class InventarioController extends Controller
                 'estado' => $inventario->estado,
                 'seguimiento' => $inventario->seguimiento,
                 'en_garantia' => $inventario->en_garantia ?? false,
+                'foto1' => $foto1Url,
+                'foto2' => $foto2Url,
             ];
         })->filter();
         
@@ -729,6 +847,8 @@ class InventarioController extends Controller
                         'estado' => $equipo->estado,
                         'estado_movimiento' => $estadoMovimiento,
                         'movimientos' => $movimientosEquipo,
+                        'foto1' => $equipo->foto1,
+                        'foto2' => $equipo->foto2,
                     ];
                 })->values()->toArray(),
             ];

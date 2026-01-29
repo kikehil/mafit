@@ -93,6 +93,37 @@
     </div>
 </div>
 
+<!-- Modal de Fotos -->
+<div id="modalFotos" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Overlay -->
+        <div id="modalFotosOverlay" class="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-75"></div>
+
+        <!-- Modal centrado -->
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                        <h3 id="modalFotosTitulo" class="text-lg leading-6 font-medium text-gray-900 mb-4"></h3>
+                        <div id="modalFotosContenedor" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Las imágenes se insertarán aquí dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button 
+                    type="button" 
+                    id="modalFotosBtnCerrar"
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal de Sin Inventarios Previos -->
 <div id="modalSinInventario" class="fixed inset-0 z-50 hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
@@ -179,7 +210,7 @@ function cerrarModal() {
     modal.classList.add('hidden');
 }
 
-// Búsqueda de tienda automática
+// Búsqueda de tienda - solo cuando se presiona Enter o se hace clic en buscar
 let searchTimeout;
 document.getElementById('searchTienda').addEventListener('input', function(e) {
     clearTimeout(searchTimeout);
@@ -191,18 +222,17 @@ document.getElementById('searchTienda').addEventListener('input', function(e) {
         return;
     }
     
-    // Esperar 500ms después de que el usuario deje de escribir
-    searchTimeout = setTimeout(() => {
-        buscarTienda();
-    }, 500);
+    // NO hacer búsqueda automática, solo ocultar resultados anteriores si hay texto
+    // La búsqueda solo se hará al presionar Enter o hacer clic en buscar
 });
 
-// También permitir búsqueda con Enter o clic en el botón
+// Búsqueda con clic en el botón
 document.getElementById('btnBuscar').addEventListener('click', function() {
     clearTimeout(searchTimeout);
     buscarTienda();
 });
 
+// Búsqueda con Enter
 document.getElementById('searchTienda').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
         e.preventDefault();
@@ -229,6 +259,9 @@ function buscarTienda() {
         return;
     }
 
+    // Ocultar resultados anteriores si existen
+    document.getElementById('tiendaResults').classList.add('hidden');
+
     fetch('{{ route("inventario.buscar-tienda-consulta") }}', {
         method: 'POST',
         headers: {
@@ -242,8 +275,9 @@ function buscarTienda() {
         if (data.success && data.tiendas.length > 0) {
             mostrarResultadosTienda(data.tiendas);
         } else {
-            const query = document.getElementById('searchTienda').value.trim();
-            mostrarModal(query || 'Búsqueda', 'No ha tenido inventario de equipos', 'info');
+            // Mostrar modal con el término de búsqueda como título
+            const queryValue = document.getElementById('searchTienda').value.trim();
+            mostrarModal(queryValue || 'Búsqueda', 'No ha tenido inventario de equipos', 'info');
         }
     })
     .catch(error => {
@@ -370,6 +404,28 @@ function crearFilaEquipo(equipo) {
     const estadoIcon = equipo.estado === 'check' ? '✓' : '✗';
     const estadoColor = equipo.estado === 'check' ? 'text-green-600' : 'text-red-600';
     
+    // Icono de fotos si tiene imágenes
+    let iconoFotos = '';
+    const tieneFotos = (equipo.foto1 || equipo.foto2);
+    if (tieneFotos) {
+        const cantidadFotos = (equipo.foto1 ? 1 : 0) + (equipo.foto2 ? 1 : 0);
+        const foto1Escapada = equipo.foto1 ? equipo.foto1.replace(/'/g, "\\'") : '';
+        const foto2Escapada = equipo.foto2 ? equipo.foto2.replace(/'/g, "\\'") : '';
+        const descripcionEscapada = (equipo.descripcion || 'Equipo').replace(/'/g, "\\'");
+        iconoFotos = `
+            <button 
+                type="button"
+                onclick="mostrarFotosEquipo('${equipo.id}', '${descripcionEscapada}', '${foto1Escapada}', '${foto2Escapada}')"
+                class="ml-2 p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                title="Ver fotos (${cantidadFotos})"
+            >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+            </button>
+        `;
+    }
+    
     // Generar etiquetas de estado de movimiento
     let etiquetasEstado = '';
     
@@ -425,7 +481,7 @@ function crearFilaEquipo(equipo) {
     return `
         <div class="bg-white border border-gray-200 rounded-lg p-4">
             <div class="flex items-start justify-between mb-3">
-                <div class="font-semibold text-gray-900 text-base flex-1">${equipo.descripcion || '-'}</div>
+                <div class="font-semibold text-gray-900 text-base flex-1 flex items-center">${equipo.descripcion || '-'}${iconoFotos}</div>
                 ${etiquetasEstado ? `<div class="flex flex-wrap gap-2 ml-2">${etiquetasEstado}</div>` : ''}
             </div>
             <div class="space-y-2">
@@ -469,12 +525,61 @@ function cerrarModalSinInventario() {
     modal.classList.add('hidden');
 }
 
+// Funciones para el modal de fotos
+function mostrarFotosEquipo(equipoId, descripcion, foto1, foto2) {
+    const modal = document.getElementById('modalFotos');
+    const modalTitulo = document.getElementById('modalFotosTitulo');
+    const modalContenedor = document.getElementById('modalFotosContenedor');
+    
+    modalTitulo.textContent = `Fotos del equipo: ${descripcion}`;
+    modalContenedor.innerHTML = '';
+    
+    const fotos = [foto1, foto2].filter(foto => foto && foto !== '' && foto !== 'null' && foto !== null);
+    
+    if (fotos.length === 0) {
+        modalContenedor.innerHTML = '<p class="text-gray-500 text-center col-span-2 py-8">No hay fotos disponibles para este equipo</p>';
+    } else {
+        fotos.forEach((foto, index) => {
+            const fotoDiv = document.createElement('div');
+            fotoDiv.className = 'relative';
+            
+            const img = document.createElement('img');
+            img.src = foto;
+            img.alt = `Foto ${index + 1}`;
+            img.className = 'w-full h-auto rounded-lg border border-gray-300 shadow-md cursor-pointer hover:opacity-90 transition-opacity';
+            img.onclick = function() {
+                window.open(foto, '_blank');
+            };
+            img.onerror = function() {
+                this.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'300\'%3E%3Crect fill=\'%23ddd\' width=\'400\' height=\'300\'/%3E%3Ctext fill=\'%23999\' font-family=\'sans-serif\' font-size=\'20\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3EImagen no disponible%3C/text%3E%3C/svg%3E';
+            };
+            
+            const label = document.createElement('p');
+            label.className = 'text-xs text-gray-500 mt-2 text-center';
+            label.textContent = `Foto ${index + 1}`;
+            
+            fotoDiv.appendChild(img);
+            fotoDiv.appendChild(label);
+            modalContenedor.appendChild(fotoDiv);
+        });
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+function cerrarModalFotos() {
+    const modal = document.getElementById('modalFotos');
+    modal.classList.add('hidden');
+}
+
 // Event listeners del modal
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('modalOverlay').addEventListener('click', cerrarModal);
     document.getElementById('modalBtnCerrar').addEventListener('click', cerrarModal);
     document.getElementById('modalSinInventarioOverlay').addEventListener('click', cerrarModalSinInventario);
     document.getElementById('modalSinInventarioBtnCerrar').addEventListener('click', cerrarModalSinInventario);
+    document.getElementById('modalFotosOverlay').addEventListener('click', cerrarModalFotos);
+    document.getElementById('modalFotosBtnCerrar').addEventListener('click', cerrarModalFotos);
 });
 </script>
 @endsection

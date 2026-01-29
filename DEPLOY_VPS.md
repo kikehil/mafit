@@ -302,3 +302,10 @@ php artisan view:cache
 3. **Firewall**: Configura un firewall (UFW) para proteger el servidor
 4. **Actualizaciones**: Mantén el servidor y las dependencias actualizadas
 
+
+
+
+
+
+
+
