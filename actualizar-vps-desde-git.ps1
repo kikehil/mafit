@@ -177,6 +177,6 @@ Write-Host "2. Recargar Nginx (si es necesario):" -ForegroundColor White
 Write-Host "   ssh $VPS_USER@$VPS_IP 'systemctl reload nginx'" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "3. Verificar que la aplicación funciona:" -ForegroundColor White
-Write-Host "   Visita tu sitio web y verifica que todo funcione correctamente" -ForegroundColor Cyan
+Write-Host '   Visita tu sitio web y verifica que todo funcione correctamente' -ForegroundColor Cyan
 Write-Host ""
 
