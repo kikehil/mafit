@@ -170,11 +170,22 @@ Write-Host "  Migraciones ejecutadas" -ForegroundColor White
 Write-Host "  Caches limpiadas y regeneradas" -ForegroundColor White
 Write-Host ""
 Write-Host "Proximos pasos opcionales:" -ForegroundColor Yellow
-Write-Host "1. Reiniciar servicios PHP-FPM (si es necesario):" -ForegroundColor White
-Write-Host "   ssh $VPS_USER@$VPS_IP 'systemctl restart php8.3-fpm'" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "2. Recargar Nginx (si es necesario):" -ForegroundColor White
+Write-Host "1. Verificar y reiniciar servicios (si es necesario):" -ForegroundColor White
+Write-Host "   Ejecuta el script de verificacion:" -ForegroundColor Gray
+Write-Host "   .\verificar-servicios-vps.ps1" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "   O manualmente:" -ForegroundColor Gray
+Write-Host "   # Detectar version de PHP:" -ForegroundColor Gray
+Write-Host "   ssh $VPS_USER@$VPS_IP 'php -v | head -n 1'" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "   # Reiniciar PHP-FPM (reemplaza X.X con tu version):" -ForegroundColor Gray
+Write-Host "   ssh $VPS_USER@$VPS_IP 'systemctl restart phpX.X-fpm'" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "2. Recargar Nginx (si esta activo):" -ForegroundColor White
 Write-Host "   ssh $VPS_USER@$VPS_IP 'systemctl reload nginx'" -ForegroundColor Cyan
+Write-Host "   # Si no esta activo, iniciarlo:" -ForegroundColor Gray
+Write-Host "   ssh $VPS_USER@$VPS_IP 'systemctl start nginx'" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "3. Verificar que la aplicacion funciona:" -ForegroundColor White
 Write-Host '   Visita tu sitio web y verifica que todo funcione correctamente' -ForegroundColor Cyan
