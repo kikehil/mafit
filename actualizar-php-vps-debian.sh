@@ -57,30 +57,20 @@ apt-get update
 
 echo ""
 echo "[4/5] Verificando disponibilidad de PHP 8.3..."
-if apt-cache search php8.3 | grep -q "^php8.3 "; then
-    echo "✓ PHP 8.3 está disponible"
-else
-    echo "✗ PHP 8.3 no está disponible en los repositorios"
-    echo "Intentando con PHP 8.2..."
-    
-    if apt-cache search php8.2 | grep -q "^php8.2 "; then
-        PHP_VERSION="8.2"
-        echo "✓ PHP 8.2 está disponible, usando esta versión"
-    else
-        echo "✗ PHP 8.2 tampoco está disponible"
-        echo "Intentando con PHP 8.1..."
-        
-        if apt-cache search php8.1 | grep -q "^php8.1 "; then
-            PHP_VERSION="8.1"
-            echo "✓ PHP 8.1 está disponible, usando esta versión"
-        else
-            echo "✗ No se encontró PHP 8.1, 8.2 ni 8.3"
-            echo "Verifica la configuración de repositorios"
-            exit 1
-        fi
-    fi
-else
+PHP_VERSION=""
+if apt-cache search php8.3 2>/dev/null | grep -q "^php8.3 "; then
     PHP_VERSION="8.3"
+    echo "✓ PHP 8.3 está disponible"
+elif apt-cache search php8.2 2>/dev/null | grep -q "^php8.2 "; then
+    PHP_VERSION="8.2"
+    echo "✓ PHP 8.2 está disponible, usando esta versión"
+elif apt-cache search php8.1 2>/dev/null | grep -q "^php8.1 "; then
+    PHP_VERSION="8.1"
+    echo "✓ PHP 8.1 está disponible, usando esta versión"
+else
+    echo "✗ No se encontró PHP 8.1, 8.2 ni 8.3"
+    echo "Verifica la configuración de repositorios"
+    exit 1
 fi
 
 echo ""
