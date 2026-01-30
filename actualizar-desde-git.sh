@@ -172,3 +172,4 @@ echo "3. Verificar logs si hay problemas:"
 echo "   tail -f storage/logs/laravel.log"
 echo ""
 
+

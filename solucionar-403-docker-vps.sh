@@ -108,3 +108,4 @@ echo "3. Verificar puertos expuestos:"
 echo "   docker compose ps | grep -E 'PORTS|mafit'"
 echo ""
 
+

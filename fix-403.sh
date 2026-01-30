@@ -74,3 +74,4 @@ echo "  1. tail -f /var/log/apache2/error.log"
 echo "  2. Verificar que DocumentRoot apunte a: $APP_DIR/public"
 echo ""
 
+

@@ -82,3 +82,4 @@ Write-Host "Alternativamente, puedes verificar manualmente:" -ForegroundColor Ye
 Write-Host "  ssh $VPS_USER@$VPS_IP 'systemctl list-units --type=service | grep -E \"php|nginx\"'" -ForegroundColor Cyan
 Write-Host ""
 
+

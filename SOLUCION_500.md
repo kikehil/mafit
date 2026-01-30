@@ -100,3 +100,4 @@ C:\xampp\php85\php.exe artisan route:list
 
 
 
+

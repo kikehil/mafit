@@ -125,3 +125,4 @@ Write-Host "4. Verificar configuracion de puertos en docker-compose.yml:" -Foreg
 Write-Host "   El puerto debe estar mapeado correctamente" -ForegroundColor Gray
 Write-Host ""
 
+
