@@ -27,7 +27,19 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
 
+        // Regenerar sesión para prevenir fijación de sesión
         $request->session()->regenerate();
+
+        // Verificar que la sesión se haya guardado correctamente
+        if (!Auth::check()) {
+            \Log::error('Error: Usuario autenticado pero sesión no persistida', [
+                'email' => $request->email,
+                'session_id' => $request->session()->getId(),
+            ]);
+            throw ValidationException::withMessages([
+                'email' => 'Error al iniciar sesión. Por favor, intente nuevamente.',
+            ]);
+        }
 
         return redirect()->intended(route('dashboard'));
     }

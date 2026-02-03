@@ -21,9 +21,10 @@ fi
 # Verificar versión actual
 CURRENT_PHP=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;" 2>/dev/null || echo "0.0")
 echo "PHP actual: $CURRENT_PHP"
+echo "Versión requerida: PHP >= 8.3.0"
 
-if [ "$(php -r "echo version_compare('$CURRENT_PHP', '8.1', '>=');" 2>/dev/null || echo "0")" = "1" ]; then
-    echo "✓ PHP ya está en versión 8.1 o superior"
+if [ "$(php -r "echo version_compare('$CURRENT_PHP', '8.3', '>=');" 2>/dev/null || echo "0")" = "1" ]; then
+    echo "✓ PHP ya está en versión 8.3 o superior"
     exit 0
 fi
 
@@ -61,15 +62,14 @@ PHP_VERSION=""
 if apt-cache search php8.3 2>/dev/null | grep -q "^php8.3 "; then
     PHP_VERSION="8.3"
     echo "✓ PHP 8.3 está disponible"
-elif apt-cache search php8.2 2>/dev/null | grep -q "^php8.2 "; then
-    PHP_VERSION="8.2"
-    echo "✓ PHP 8.2 está disponible, usando esta versión"
-elif apt-cache search php8.1 2>/dev/null | grep -q "^php8.1 "; then
-    PHP_VERSION="8.1"
-    echo "✓ PHP 8.1 está disponible, usando esta versión"
 else
-    echo "✗ No se encontró PHP 8.1, 8.2 ni 8.3"
-    echo "Verifica la configuración de repositorios"
+    echo "✗ ERROR: PHP 8.3 no está disponible"
+    echo "  El proyecto REQUIERE PHP >= 8.3.0"
+    echo "  Verifica la configuración de repositorios"
+    echo ""
+    echo "  Intenta manualmente:"
+    echo "  sudo add-apt-repository ppa:ondrej/php -y"
+    echo "  sudo apt update"
     exit 1
 fi
 
@@ -97,6 +97,8 @@ echo "Configurando Apache..."
 # Deshabilitar versiones antiguas de PHP
 a2dismod php7.4 2>/dev/null || true
 a2dismod php8.0 2>/dev/null || true
+a2dismod php8.1 2>/dev/null || true
+a2dismod php8.2 2>/dev/null || true
 
 # Habilitar nueva versión
 a2enmod php${PHP_VERSION} 2>/dev/null || {
@@ -116,7 +118,7 @@ NEW_VERSION=$(php -v | head -n 1)
 echo "Versión instalada: $NEW_VERSION"
 
 NEW_PHP=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
-if [ "$(php -r "echo version_compare('$NEW_PHP', '8.1', '>=');")" = "1" ]; then
+if [ "$(php -r "echo version_compare('$NEW_PHP', '8.3', '>=');")" = "1" ]; then
     echo "✓ PHP actualizado correctamente a $NEW_PHP"
     echo ""
     echo "Extensiones instaladas:"
