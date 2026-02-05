@@ -48,6 +48,12 @@ class AppServiceProvider extends ServiceProvider
         if (request()->isSecure()) {
             $isSecure = true;
         }
+
+        // Método 5: Forzar en Producción (Fix para VPS)
+        // Si estamos en producción, asumir siempre HTTPS para evitar redirects mixtos (http:443)
+        if (config('app.env') === 'production') {
+            $isSecure = true;
+        }
         
         // Si la solicitud es segura, forzar HTTPS en todas las URLs
         if ($isSecure) {
