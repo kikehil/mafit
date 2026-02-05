@@ -104,3 +104,7 @@ echo "  2. apt-cache policy php8.1"
 echo "  3. Verificar que la clave GPG esté correcta"
 echo ""
 
+
+
+
+

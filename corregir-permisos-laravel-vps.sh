@@ -100,3 +100,7 @@ echo "  2. Limpiar cachés: php artisan cache:clear"
 echo "  3. Verificar que el sitio funciona"
 echo ""
 
+
+
+
+

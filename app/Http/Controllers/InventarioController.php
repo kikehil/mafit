@@ -43,7 +43,25 @@ class InventarioController extends Controller
      */
     public function captura()
     {
-        return view('inventario.captura');
+        // Estadísticas para el mini-dashboard
+        
+        // 1. Total de inventarios (Tiendas únicas)
+        $totalInventarios = Inventariotda::distinct('cr')->count('cr');
+        
+        // 2. Inventarios realizados hoy
+        $inventariosHoy = Inventariotda::whereDate('fecha_inventario', now()->today())
+            ->distinct('cr')
+            ->count('cr');
+            
+        // 3. Top 3 Usuarios (por cantidad de tiendas inventariadas)
+        $topUsuarios = Inventariotda::select('user_id', DB::raw('count(distinct cr) as total'))
+            ->groupBy('user_id')
+            ->orderByDesc('total')
+            ->take(3)
+            ->with('user')
+            ->get();
+            
+        return view('inventario.captura', compact('totalInventarios', 'inventariosHoy', 'topUsuarios'));
     }
 
     /**
@@ -57,11 +75,12 @@ class InventarioController extends Controller
 
         $query = trim($request->input('query'));
 
-        // Buscar tiendas por CR o nombre
+        // Buscar tiendas por CR o nombre (Insensible a mayúsculas/minúsculas para VPS)
+        $lowerQuery = strtolower($query);
         $tiendas = Maf::whereNotNull('cr')
-            ->where(function ($q) use ($query) {
-                $q->where('cr', 'like', "%{$query}%")
-                  ->orWhere('tienda', 'like', "%{$query}%");
+            ->where(function ($q) use ($lowerQuery) {
+                $q->whereRaw('LOWER(cr) LIKE ?', ["%{$lowerQuery}%"])
+                  ->orWhereRaw('LOWER(tienda) LIKE ?', ["%{$lowerQuery}%"]);
             })
             ->select('cr', 'tienda', 'plaza')
             ->distinct()
@@ -524,11 +543,12 @@ class InventarioController extends Controller
 
         $query = trim($request->input('query'));
 
-        // Buscar tiendas por CR o nombre desde inventariotda
+        // Buscar tiendas por CR o nombre desde inventariotda (Insensible a mayúsculas/minúsculas para VPS)
+        $lowerQuery = strtolower($query);
         $inventarios = Inventariotda::whereNotNull('cr')
-            ->where(function ($q) use ($query) {
-                $q->where('cr', 'like', "%{$query}%")
-                  ->orWhere('tienda', 'like', "%{$query}%");
+            ->where(function ($q) use ($lowerQuery) {
+                $q->whereRaw('LOWER(cr) LIKE ?', ["%{$lowerQuery}%"])
+                  ->orWhereRaw('LOWER(tienda) LIKE ?', ["%{$lowerQuery}%"]);
             })
             ->with('maf')
             ->get()
@@ -865,9 +885,43 @@ class InventarioController extends Controller
     /**
      * Mostrar vista de inventarios realizados
      */
-    public function realizados()
+    public function realizados(Request $request)
     {
-        return view('inventario.realizados');
+        $search = $request->input('b');
+        
+        // Consulta base para obtener CRs únicos que tienen inventario
+        $query = Inventariotda::query();
+        
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('cr', 'like', "%{$search}%")
+                  ->orWhere('tienda', 'like', "%{$search}%");
+            });
+        }
+        
+        // Obtenemos los CRs únicos paginados
+        $inventarios = $query->select('cr')
+            ->distinct()
+            ->orderBy('cr')
+            ->paginate(15);
+            
+        // Transformamos cada item para agregarle los detalles del último inventario
+        $inventarios->getCollection()->transform(function ($item) {
+            $latest = Inventariotda::where('cr', $item->cr)
+                ->with(['user', 'maf'])
+                ->orderBy('fecha_inventario', 'desc')
+                ->first();
+                
+            return [
+                'cr' => $item->cr,
+                'tienda' => $latest->tienda ?? 'Tienda Desconocida',
+                'plaza' => $latest->maf->plaza ?? null,
+                'fecha' => $latest->fecha_inventario,
+                'usuario_nombre' => $latest->user->name ?? 'Desconocido'
+            ];
+        });
+
+        return view('inventario.realizados', compact('inventarios'));
     }
 
     /**

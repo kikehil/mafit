@@ -1,257 +1,142 @@
 @extends('layouts.app')
 
 @section('title', 'Inventarios Realizados')
-@section('page-title', 'Inventarios Realizados')
 
 @section('content')
-<div class="min-h-screen bg-gray-50 pb-8">
-    <div class="p-4">
-        <!-- Filtros -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-3">Filtrar por:</label>
-                    <div class="flex gap-6">
-                        <label class="flex items-center cursor-pointer">
-                            <input 
-                                type="radio" 
-                                name="filtro" 
-                                value="con_inventario"
-                                id="filtroConInventario"
-                                checked
-                                class="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500"
-                            >
-                            <span class="ml-2 text-sm font-medium text-gray-700">Con Inventario</span>
-                        </label>
-                        <label class="flex items-center cursor-pointer">
-                            <input 
-                                type="radio" 
-                                name="filtro" 
-                                value="sin_inventario"
-                                id="filtroSinInventario"
-                                class="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500"
-                            >
-                            <span class="ml-2 text-sm font-medium text-gray-700">Sin Inventario</span>
-                        </label>
-                    </div>
-                </div>
-                <button 
-                    id="btnBuscar"
-                    class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
-                >
-                    Buscar
-                </button>
-            </div>
+<div class="max-w-7xl mx-auto space-y-6">
+    <!-- Header with Glassmorphism -->
+    <div class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-20 z-30 transition-all duration-300 hover:shadow-md">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Inventarios Realizados</h1>
+            <p class="text-slate-500 text-sm mt-1">Historial de capturas completadas</p>
         </div>
-
-        <!-- Resultados -->
-        <div id="resultadosContainer" class="hidden">
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div class="px-4 md:px-6 py-4 border-b border-gray-200">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-gray-900">Resultados</h3>
-                        <span id="totalTiendas" class="text-sm text-gray-600"></span>
-                    </div>
+        
+        <!-- Search Bar -->
+        <div class="w-full md:w-96">
+            <form action="{{ route('inventario.realizados') }}" method="GET" class="relative group">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
                 </div>
-                <div id="resultados" class="divide-y divide-gray-200"></div>
-            </div>
-        </div>
-
-        <!-- Estado vacío -->
-        <div id="emptyState" class="flex flex-col items-center justify-center min-h-[60vh] text-center">
-            <svg class="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-            </svg>
-            <p class="text-gray-500 text-lg">Seleccione un filtro y haga clic en "Buscar" para ver las tiendas</p>
+                <input type="text" name="b" value="{{ request('b') }}" 
+                    class="block w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-sm group-hover:bg-white" 
+                    placeholder="Buscar por tienda, CR o plaza...">
+            </form>
         </div>
     </div>
-</div>
 
-<!-- Modal de Notificación -->
-<div id="modalNotificacion" class="fixed inset-0 z-50 hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <!-- Overlay -->
-        <div id="modalOverlay" class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"></div>
+    <!-- Results List -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <h2 class="font-semibold text-slate-700">Resultados</h2>
+            <span class="text-xs font-medium text-slate-500 bg-slate-200/50 px-2.5 py-1 rounded-full">{{ $inventarios->total() }} tiendas encontradas con inventario</span>
+        </div>
 
-        <!-- Modal centrado -->
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div class="sm:flex sm:items-start">
-                    <div id="modalIcon" class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10">
-                        <!-- Icono se llenará dinámicamente -->
-                    </div>
-                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
-                        <h3 id="modalTitulo" class="text-lg leading-6 font-medium text-gray-900"></h3>
-                        <div class="mt-2">
-                            <p id="modalMensaje" class="text-sm text-gray-500"></p>
+        @if($inventarios->count() > 0)
+            <div class="divide-y divide-slate-100">
+                @foreach($inventarios as $inv)
+                <div class="p-6 hover:bg-slate-50 transition-colors duration-150 group relative">
+                    <div class="flex flex-col md:flex-row justify-between gap-4">
+                        <!-- Store Info -->
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="text-lg font-bold text-slate-900">{{ $inv['tienda'] }}</h3>
+                                <span class="px-2.5 py-0.5 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold font-mono tracking-wide border border-blue-200">
+                                    {{ $inv['cr'] }}
+                                </span>
+                                @if($inv['plaza'])
+                                <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-xs font-medium border border-slate-200">
+                                    {{ $inv['plaza'] }}
+                                </span>
+                                @endif
+                            </div>
+                            
+                            <div class="flex items-center text-sm text-slate-500 gap-1">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>Último inventario: <span class="font-medium text-slate-700">{{ \Carbon\Carbon::parse($inv['fecha'])->format('d/m/Y H:i') }}</span></span>
+                                <span class="mx-2 text-slate-300">|</span>
+                                <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                <span>por <span class="font-medium text-slate-700">{{ $inv['usuario_nombre'] ?? 'Desconocido' }}</span></span>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex items-center gap-3 self-start md:self-center">
+                            <a href="{{ route('inventario.consulta', ['cr' => $inv['cr']]) }}" 
+                               class="inline-flex items-center px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 hover:text-blue-600 hover:border-blue-200 hover:shadow-md transition-all active:scale-95 group/btn">
+                                <span>Ver Detalle</span>
+                                <svg class="ml-2 -mr-1 w-4 h-4 text-slate-400 group-hover/btn:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                </svg>
+                            </a>
+                            <button type="button" onclick="window.mostrarModal('Próximamente', 'La función de exportar a Excel estará disponible pronto.', 'info')"
+                               class="inline-flex items-center justify-center w-10 h-10 bg-white border border-slate-200 rounded-xl text-slate-500 shadow-sm hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 hover:shadow-md transition-all active:scale-95"
+                               title="Exportar Excel">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 </div>
+                @endforeach
             </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button 
-                    type="button" 
-                    id="modalBtnCerrar"
-                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
-                >
-                    Aceptar
-                </button>
+            
+            <!-- Pagination -->
+            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50">
+                {{ $inventarios->links() }}
             </div>
-        </div>
+        @else
+            <div class="p-12 text-center text-slate-500">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-4">
+                    <svg class="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-medium text-slate-900">No se encontraron resultados</h3>
+                <p class="mt-1 max-w-sm mx-auto">Intenta ajustar tu búsqueda o prueba con otros términos.</p>
+            </div>
+        @endif
     </div>
 </div>
 
+<!-- Scroll to Top Button -->
+<button id="btnVolverArriba" 
+        onclick="volverArriba()" 
+        class="fixed bottom-8 right-8 z-50 p-3 rounded-full shadow-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 transform translate-y-20 opacity-0 hidden hover:shadow-blue-500/30">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+    </svg>
+</button>
+
 <script>
-// Funciones para el modal de notificación
-function mostrarModal(titulo, mensaje, tipo = 'info') {
-    const modal = document.getElementById('modalNotificacion');
-    const modalTitulo = document.getElementById('modalTitulo');
-    const modalMensaje = document.getElementById('modalMensaje');
-    const modalIcon = document.getElementById('modalIcon');
-    
-    modalTitulo.textContent = titulo;
-    modalMensaje.textContent = mensaje;
-    
-    // Limpiar clases previas
-    modalIcon.className = 'mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10';
-    
-    // Configurar icono según el tipo
-    if (tipo === 'success') {
-        modalIcon.classList.add('bg-green-100');
-        modalIcon.innerHTML = `
-            <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-        `;
-    } else if (tipo === 'error') {
-        modalIcon.classList.add('bg-red-100');
-        modalIcon.innerHTML = `
-            <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-        `;
-    } else {
-        modalIcon.classList.add('bg-blue-100');
-        modalIcon.innerHTML = `
-            <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-        `;
-    }
-    
-    modal.classList.remove('hidden');
-}
+    // Scroll to Top Logic
+    const btnVolverArriba = document.getElementById('btnVolverArriba');
 
-function cerrarModal() {
-    const modal = document.getElementById('modalNotificacion');
-    modal.classList.add('hidden');
-}
-
-// Event listeners del modal
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('modalOverlay').addEventListener('click', cerrarModal);
-    document.getElementById('modalBtnCerrar').addEventListener('click', cerrarModal);
-    
-    // Event listener para el botón de búsqueda
-    document.getElementById('btnBuscar').addEventListener('click', buscarTiendas);
-    
-    // Event listener para los radio buttons
-    document.querySelectorAll('input[name="filtro"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            // Mostrar botón flotante cuando se selecciona un filtro
-            if (typeof mostrarBotonVolverArriba === 'function') {
-                mostrarBotonVolverArriba();
+    if (btnVolverArriba) {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                btnVolverArriba.classList.remove('hidden');
+                // Small delay to allow display:block to apply before opacity transition
+                setTimeout(() => {
+                    btnVolverArriba.classList.remove('translate-y-20', 'opacity-0');
+                }, 10);
+            } else {
+                btnVolverArriba.classList.add('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    btnVolverArriba.classList.add('hidden');
+                }, 300);
             }
-            // Opcional: buscar automáticamente al cambiar el filtro
-            // buscarTiendas();
         });
-    });
-});
+    }
 
-function buscarTiendas() {
-    const filtroSeleccionado = document.querySelector('input[name="filtro"]:checked');
-    
-    if (!filtroSeleccionado) {
-        mostrarModal('Información', 'Por favor seleccione un filtro', 'info');
-        return;
+    function volverArriba() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    
-    // Mostrar botón flotante cuando se realiza una búsqueda
-    if (typeof mostrarBotonVolverArriba === 'function') {
-        mostrarBotonVolverArriba();
-    }
-    
-    const filtro = filtroSeleccionado.value;
-    
-    fetch('{{ route("inventario.obtener-tiendas-realizados") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify({ filtro })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            mostrarResultados(data.tiendas, data.total, filtro);
-        } else {
-            mostrarModal('Error', data.message || 'Error al obtener tiendas', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        mostrarModal('Error', 'Error al buscar tiendas. Por favor intente nuevamente.', 'error');
-    });
-}
-
-function mostrarResultados(tiendas, total, filtro) {
-    document.getElementById('emptyState').classList.add('hidden');
-    document.getElementById('resultadosContainer').classList.remove('hidden');
-    
-    const totalElement = document.getElementById('totalTiendas');
-    const tipoTexto = filtro === 'con_inventario' ? 'con inventario' : 'sin inventario';
-    totalElement.textContent = `${total} ${total === 1 ? 'tienda encontrada' : 'tiendas encontradas'} ${tipoTexto}`;
-    
-    const container = document.getElementById('resultados');
-    container.innerHTML = '';
-    
-    if (tiendas.length === 0) {
-        container.innerHTML = `
-            <div class="p-12 text-center">
-                <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <p class="text-gray-500 text-lg">No se encontraron tiendas ${tipoTexto}</p>
-            </div>
-        `;
-        return;
-    }
-    
-    tiendas.forEach(tienda => {
-        const tiendaDiv = document.createElement('div');
-        tiendaDiv.className = 'px-4 md:px-6 py-4 hover:bg-gray-50 transition-colors';
-        tiendaDiv.innerHTML = `
-            <div class="flex items-center justify-between">
-                <div class="flex-1">
-                    <div class="flex items-center gap-3">
-                        <h4 class="text-base font-semibold text-gray-900">${tienda.tienda || tienda.cr}</h4>
-                        <span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">${tienda.cr}</span>
-                    </div>
-                    ${tienda.ultimo_inventario ? `
-                        <p class="text-sm text-gray-600 mt-1">
-                            Último inventario: <span class="font-medium">${tienda.ultimo_inventario.fecha}</span> 
-                            por <span class="font-medium">${tienda.ultimo_inventario.usuario}</span>
-                        </p>
-                    ` : `
-                        <p class="text-sm text-gray-500 mt-1">Sin inventarios registrados</p>
-                    `}
-                </div>
-            </div>
-        `;
-        container.appendChild(tiendaDiv);
-    });
-}
 </script>
 @endsection
-

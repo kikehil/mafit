@@ -126,3 +126,4 @@ if (!$isSecure && config('session.secure')) {
 
 echo "\n=== FIN DEL DIAGNÓSTICO ===\n";
 
+

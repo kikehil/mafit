@@ -292,3 +292,7 @@ php artisan route:list
 
 
 
+
+
+
+

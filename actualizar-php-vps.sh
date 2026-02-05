@@ -80,3 +80,7 @@ echo "  1. Instalar dependencias: composer install"
 echo "  2. Verificar que todo funciona"
 echo ""
 
+
+
+
+

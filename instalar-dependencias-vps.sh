@@ -66,3 +66,7 @@ echo "  2. Ejecutar migraciones: php artisan migrate"
 echo "  3. Compilar assets: npm install && npm run build"
 echo ""
 
+
+
+
+

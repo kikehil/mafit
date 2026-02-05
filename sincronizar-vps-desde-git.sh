@@ -59,3 +59,7 @@ echo "Verifica el estado:"
 echo "  git status"
 echo ""
 
+
+
+
+

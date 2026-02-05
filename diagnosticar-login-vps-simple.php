@@ -249,3 +249,4 @@ if (file_exists($envFile)) {
 
 echo "\n=== FIN DEL DIAGNÓSTICO ===\n";
 
+

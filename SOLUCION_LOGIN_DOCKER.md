@@ -300,3 +300,4 @@ Si el problema persiste, revisa los logs:
 docker-compose logs app | tail -50
 ```
 
+

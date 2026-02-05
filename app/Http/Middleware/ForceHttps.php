@@ -44,11 +44,41 @@ class ForceHttps
         
         // Si es HTTPS, forzar esquema en todas las URLs
         if ($isSecure || $request->isSecure()) {
+            // Obtener el host sin puerto
+            $host = $request->getHost();
+            
+            // Remover el puerto si está presente (ej: mafit.regiontamaulipas.com.mx:443)
+            if (str_contains($host, ':')) {
+                $host = explode(':', $host)[0];
+            }
+            
+            // Configurar la URL base sin puerto (443 es el puerto por defecto de HTTPS)
+            $rootUrl = 'https://' . $host;
+            
+            // Forzar esquema HTTPS y URL base sin puerto
             URL::forceScheme('https');
+            URL::forceRootUrl($rootUrl);
+            
+            // Forzar que el puerto por defecto sea null (no se incluirá en URLs)
+            // Esto previene que Laravel incluya :443 en las URLs generadas
+            $request->server->set('SERVER_PORT', 443);
+            $request->server->set('HTTPS', 'on');
+            
             // Actualizar APP_URL dinámicamente
             $appUrl = config('app.url');
-            if ($appUrl && str_starts_with($appUrl, 'http://')) {
-                config(['app.url' => str_replace('http://', 'https://', $appUrl)]);
+            if ($appUrl) {
+                // Remover puerto 443 si está presente
+                $appUrl = preg_replace('/:443(\/|$)/', '$1', $appUrl);
+                $appUrl = preg_replace('/:443$/', '', $appUrl);
+                if (str_starts_with($appUrl, 'http://')) {
+                    $appUrl = str_replace('http://', 'https://', $appUrl);
+                }
+                // Asegurar que no tenga puerto 443
+                $appUrl = preg_replace('/:443(\/|$)/', '$1', $appUrl);
+                $appUrl = preg_replace('/:443$/', '', $appUrl);
+                config(['app.url' => $appUrl]);
+            } else {
+                config(['app.url' => $rootUrl]);
             }
         }
         

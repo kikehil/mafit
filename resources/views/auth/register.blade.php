@@ -1,51 +1,92 @@
-@extends('layouts.app')
+@extends('layouts.guest')
 
 @section('title', 'Registrarse')
 
 @section('content')
-<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-        <div>
-            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Crear Cuenta
-            </h2>
-        </div>
-        <form class="mt-8 space-y-6" action="{{ route('register') }}" method="POST">
-            @csrf
-            <div class="space-y-4">
-                <div>
-                    <label for="name" class="block text-sm font-medium text-gray-700">Nombre</label>
-                    <input id="name" name="name" type="text" required class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Nombre completo">
-                </div>
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                    <input id="email" name="email" type="email" required class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Email">
-                </div>
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
-                    <input id="password" name="password" type="password" required class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Contraseña">
-                </div>
-                <div>
-                    <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Confirmar Contraseña</label>
-                    <input id="password_confirmation" name="password_confirmation" type="password" required class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Confirmar contraseña">
-                </div>
-            </div>
-
-            <div>
-                <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Registrarse
-                </button>
-            </div>
-
-            <div class="text-center">
-                <a href="{{ route('login') }}" class="font-medium text-indigo-600 hover:text-indigo-500">
-                    ¿Ya tienes cuenta? Inicia sesión
-                </a>
-            </div>
-        </form>
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-white text-center">Crear Cuenta</h2>
+        <p class="text-slate-400 text-center text-sm mt-2">Únete al sistema de gestión MAFIT</p>
     </div>
-</div>
+
+    <form method="POST" action="{{ route('register') }}">
+        @csrf
+
+        <!-- Name -->
+        <div class="mb-5">
+            <label for="name" class="block text-xs font-semibold text-slate-300 uppercase mb-2 ml-1">Nombre Completo</label>
+            <div class="relative group">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-slate-500 group-focus-within:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                </div>
+                <input id="name" type="text" name="name" :value="old('name')" required autofocus 
+                    class="block w-full pl-10 pr-3 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="Tu Nombre">
+            </div>
+        </div>
+
+        <!-- Email -->
+        <div class="mb-5">
+            <label for="email" class="block text-xs font-semibold text-slate-300 uppercase mb-2 ml-1">Correo Electrónico</label>
+            <div class="relative group">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-slate-500 group-focus-within:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                    </svg>
+                </div>
+                <input id="email" type="email" name="email" :value="old('email')" required 
+                    class="block w-full pl-10 pr-3 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="usuario@ejemplo.com">
+            </div>
+        </div>
+
+        <!-- Password -->
+        <div class="mb-5">
+            <label for="password" class="block text-xs font-semibold text-slate-300 uppercase mb-2 ml-1">Contraseña</label>
+            <div class="relative group">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-slate-500 group-focus-within:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <input id="password" type="password" name="password" required autocomplete="new-password"
+                    class="block w-full pl-10 pr-3 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="••••••••">
+            </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="mb-8">
+            <label for="password_confirmation" class="block text-xs font-semibold text-slate-300 uppercase mb-2 ml-1">Confirmar Contraseña</label>
+            <div class="relative group">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-slate-500 group-focus-within:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <input id="password_confirmation" type="password" name="password_confirmation" required 
+                    class="block w-full pl-10 pr-3 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="••••••••">
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="w-full flex justify-center py-3.5 px-4 rounded-xl shadow-lg shadow-blue-500/30 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all active:scale-[0.98]">
+            REGISTRARSE
+        </button>
+
+        <div class="mt-6 text-center">
+            <a href="{{ route('login') }}" class="text-sm font-medium text-slate-400 hover:text-white transition-colors">
+                ¿Ya tienes cuenta? <span class="text-blue-400">Inicia sesión</span>
+            </a>
+        </div>
+    </form>
 @endsection
+
+
+
+
 
 
 

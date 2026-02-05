@@ -184,3 +184,4 @@ echo "   docker-compose exec app php artisan route:cache"
 echo ""
 echo "=== FIN DEL DIAGNÓSTICO ==="
 
+

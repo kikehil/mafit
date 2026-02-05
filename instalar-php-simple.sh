@@ -98,3 +98,7 @@ echo "  cd /var/www/html/mafit"
 echo "  composer install --no-dev --optimize-autoloader"
 echo ""
 
+
+
+
+
