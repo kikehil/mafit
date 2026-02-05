@@ -17,7 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         
         // Configurar TrustProxies para detectar HTTPS correctamente
         $middleware->trustProxies(at: '*');
-        $middleware->trustHosts(at: ['*']);
+        // $middleware->trustHosts(at: ['*']); // CAUSA ERROR 500: regex invalido
         
         // Agregar middleware para forzar HTTPS cuando sea necesario (al inicio del stack)
         $middleware->web(prepend: [
