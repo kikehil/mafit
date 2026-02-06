@@ -57,6 +57,7 @@ class DashboardController extends Controller
 
     /**
      * Realiza la búsqueda por PLACA o SERIE
+     * Lógica mejorada: Busca globalmente si no se especifica lote.
      */
     public function search(Request $request)
     {
@@ -68,68 +69,53 @@ class DashboardController extends Controller
         $query = trim($request->input('query'));
         $batchId = $request->input('batch_id');
 
-        // Si no se especifica batch, buscaremos en TODOS (lógica aplicada más abajo)
-
-        // Verificar si existen lotes disponibles
+        // Obtener historial de lotes para el selector
         $batches = MafImportBatch::where('status', 'done')
             ->orderBy('finished_at', 'desc')
             ->get();
 
-        if ($batches->isEmpty()) {
-            return view('dashboard.index', [
-                'results' => collect([]),
-                'query' => $query,
-                'batches' => collect([]),
-                'currentBatch' => null,
-                'lastBatch' => null,
-            ]);
-        }
-
-        // Construir la consulta
+        // 1. Configurar consulta base
         $mafQuery = Maf::query();
 
+        // 2. Filtrar por lote SOLO si se especificó explícitamente
         if ($batchId) {
             $mafQuery->where('batch_id', $batchId);
+            $currentBatch = MafImportBatch::find($batchId);
         } else {
-            // Si no hay batch seleccionado, buscar en TODOS los lotes 'done'
-            $doneBatchIds = MafImportBatch::where('status', 'done')->pluck('id');
-            $mafQuery->whereIn('batch_id', $doneBatchIds);
+            // Búsqueda GLOBAL (ignoramos batch_id)
+            $currentBatch = null;
         }
 
-        // Buscar por PLACA o SERIE (case-insensitive, sin espacios)
+        // 3. Preparar términos de búsqueda
         $cleanQuery = strtoupper(preg_replace('/\s+/', '', $query));
-        
-        // Generar variaciones de placa con y sin ceros iniciales
         $variacionesPlaca = $this->generarVariacionesPlaca($cleanQuery);
         
+        // 4. Aplicar filtros de Placa/Serie usando la lógica de Movimientos
         $mafQuery->where(function ($q) use ($cleanQuery, $variacionesPlaca) {
-            // Buscar por placa con variaciones
+            // Coincidencia exacta en lista de variaciones
+            $q->whereIn('placa', $variacionesPlaca)
+              ->orWhere('serie', $cleanQuery);
+
+            // Búsqueda flexible (LIKE) para parciales
             foreach ($variacionesPlaca as $variacion) {
-                $q->orWhereRaw("UPPER(REPLACE(placa, ' ', '')) LIKE ?", ["%{$variacion}%"]);
+                $q->orWhere('placa', 'LIKE', "%{$variacion}%");
             }
-            // Buscar por serie
-            $q->orWhereRaw("UPPER(REPLACE(serie, ' ', '')) LIKE ?", ["%{$cleanQuery}%"]);
+            $q->orWhere('serie', 'LIKE', "%{$cleanQuery}%");
         });
 
+        // 5. Ejecutar consulta
         $results = $mafQuery->with(['batch', 'plazaRelation'])
-            ->orderBy('cr')
+            ->orderBy('imported_at', 'desc') // Priorizar lo más reciente
             ->orderBy('placa')
+            ->limit(50)
             ->get();
 
-        // Calcular categoría on the fly si no está guardada (modo A)
+        // 6. Calcular categorías faltantes
         foreach ($results as $result) {
             if (empty($result->categoria) && !empty($result->descripcion)) {
                 $result->categoria = MafCategoriaMap::buscarCategoria($result->descripcion);
             }
         }
-
-        // Obtener todos los lotes "done" para el selector
-        $batches = MafImportBatch::where('status', 'done')
-            ->orderBy('finished_at', 'desc')
-            ->get();
-
-        // Obtener el batch actual
-        $currentBatch = $batchId ? MafImportBatch::find($batchId) : null;
 
         return view('dashboard.index', [
             'results' => $results,
