@@ -93,8 +93,8 @@ class DashboardController extends Controller
         // 4. Aplicar filtros de Placa/Serie usando la lógica de Movimientos
         $mafQuery->where(function ($q) use ($cleanQuery, $variacionesPlaca) {
             // Coincidencia exacta en lista de variaciones
-            $q->whereIn('placa', $variacionesPlaca)
-              ->orWhere('serie', $cleanQuery);
+            $q->whereIn('placa', $variacionesPlaca);
+            $q->orWhere('serie', $cleanQuery);
 
             // Búsqueda flexible (LIKE) para parciales
             foreach ($variacionesPlaca as $variacion) {
