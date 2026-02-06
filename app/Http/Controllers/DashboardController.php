@@ -98,9 +98,9 @@ class DashboardController extends Controller
 
             // Búsqueda flexible (LIKE) para parciales
             foreach ($variacionesPlaca as $variacion) {
-                $q->orWhere('placa', 'LIKE', "%{$variacion}%");
+                $q->orWhere('placa', 'LIKE', '%' . $variacion . '%');
             }
-            $q->orWhere('serie', 'LIKE', "%{$cleanQuery}%");
+            $q->orWhere('serie', 'LIKE', '%' . $cleanQuery . '%');
         });
 
         // 5. Ejecutar consulta
