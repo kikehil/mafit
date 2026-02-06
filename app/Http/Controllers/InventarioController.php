@@ -77,18 +77,15 @@ class InventarioController extends Controller
 
         // Buscar tiendas por CR o nombre (Insensible a mayúsculas/minúsculas para VPS)
         $lowerQuery = strtolower($query);
-        $tiendas = Maf::whereNotNull('cr')
-            ->where(function ($q) use ($lowerQuery) {
+        // Buscar tiendas en el catálogo de Tiendas (Más rápido y seguro)
+        $lowerQuery = strtolower($query);
+        $tiendas = Tienda::where(function ($q) use ($lowerQuery) {
                 $q->whereRaw('LOWER(cr) LIKE ?', ["%{$lowerQuery}%"])
                   ->orWhereRaw('LOWER(tienda) LIKE ?', ["%{$lowerQuery}%"]);
             })
             ->select('cr', 'tienda', 'plaza')
-            ->distinct()
-            ->get()
-            ->unique(function ($item) {
-                return $item->cr . $item->plaza;
-            })
-            ->take(10);
+            ->limit(10)
+            ->get();
 
         if ($tiendas->isEmpty()) {
             return response()->json([
