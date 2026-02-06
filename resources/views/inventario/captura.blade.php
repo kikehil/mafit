@@ -263,7 +263,7 @@ function buscarTienda(query) {
     resultsContainer.innerHTML = '<div class="p-4 text-center text-slate-400 text-sm">Buscando...</div>';
     resultsContainer.classList.remove('hidden');
 
-    fetch('{{ route("inventario.buscar-tienda") }}', {
+    fetch('/inventario/buscar-tienda', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
         body: JSON.stringify({ query })
@@ -317,7 +317,7 @@ function seleccionarTienda(cr, plaza) {
     mainContainer.classList.remove('hidden');
     // You could put skeleton loaders here if you want extra polish
     
-    fetch('{{ route("inventario.obtener-equipos") }}', {
+    fetch('/inventario/obtener-equipos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
         body: JSON.stringify({ cr, plaza })
@@ -719,7 +719,7 @@ function submitForm() {
         }
     });
 
-    fetch('{{ route("inventario.guardar") }}', {
+    fetch('/inventario/guardar', {
         method: 'POST',
         body: formData,
         headers: {
