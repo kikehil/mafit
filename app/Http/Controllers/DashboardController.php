@@ -68,32 +68,33 @@ class DashboardController extends Controller
         $query = trim($request->input('query'));
         $batchId = $request->input('batch_id');
 
-        // Si no se especifica batch, usar el último "done"
-        if (!$batchId) {
-            $lastBatch = MafImportBatch::where('status', 'done')
-                ->orderBy('finished_at', 'desc')
-                ->first();
-            $batchId = $lastBatch?->id;
-        }
+        // Si no se especifica batch, buscaremos en TODOS (lógica aplicada más abajo)
 
-        // Si no hay batch disponible, retornar sin resultados
-        if (!$batchId) {
-            $batches = MafImportBatch::where('status', 'done')
-                ->orderBy('finished_at', 'desc')
-                ->get();
-            
+        // Verificar si existen lotes disponibles
+        $batches = MafImportBatch::where('status', 'done')
+            ->orderBy('finished_at', 'desc')
+            ->get();
+
+        if ($batches->isEmpty()) {
             return view('dashboard.index', [
                 'results' => collect([]),
                 'query' => $query,
-                'batches' => $batches,
+                'batches' => collect([]),
                 'currentBatch' => null,
-                'lastBatch' => $batches->first(),
+                'lastBatch' => null,
             ]);
         }
 
         // Construir la consulta
         $mafQuery = Maf::query();
-        $mafQuery->where('batch_id', $batchId);
+
+        if ($batchId) {
+            $mafQuery->where('batch_id', $batchId);
+        } else {
+            // Si no hay batch seleccionado, buscar en TODOS los lotes 'done'
+            $doneBatchIds = MafImportBatch::where('status', 'done')->pluck('id');
+            $mafQuery->whereIn('batch_id', $doneBatchIds);
+        }
 
         // Buscar por PLACA o SERIE (case-insensitive, sin espacios)
         $cleanQuery = strtoupper(preg_replace('/\s+/', '', $query));
