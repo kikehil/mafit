@@ -14,10 +14,10 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="font-sans antialiased text-gray-900 bg-slate-900 selection:bg-blue-500 selection:text-white overflow-hidden">
+<body class="font-sans antialiased text-white bg-slate-900 selection:bg-blue-500 selection:text-white overflow-hidden">
     
     <!-- Animated Background -->
-    <div class="fixed inset-0 z-0">
+    <div class="fixed inset-0 z-0 pointer-events-none">
         <!-- Blobs -->
         <div class="absolute top-0 left-0 w-full h-full overflow-hidden opacity-40">
             <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-600/30 rounded-full blur-[128px] animate-pulse"></div>
