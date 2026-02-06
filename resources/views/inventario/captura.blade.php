@@ -745,8 +745,7 @@ function submitForm() {
         btnLoading.classList.add('hidden');
     });
 }
-    });
-}
+
 
 
 </script>
