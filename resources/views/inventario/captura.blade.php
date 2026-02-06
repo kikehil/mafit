@@ -131,7 +131,11 @@
                     </div>
                     
                     <!-- Stats / Filter Area -->
-                    <div class="flex flex-col gap-3 w-full md:w-auto">
+                    <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                        <button onclick="abrirModalAgregar()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-xl font-bold shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2 whitespace-nowrap">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                            Agregar Equipo
+                        </button>
                         <select 
                             id="filtroCategoria"
                             class="bg-white/10 border border-white/20 text-white placeholder-white/50 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-3 backdrop-blur-sm transition-all hover:bg-white/20"
@@ -194,6 +198,69 @@
         </div>
         
     </div>
+
+    <!-- Modal Agregar Equipo -->
+    <div id="modalAgregarEquipo" class="fixed inset-0 z-[60] flex items-center justify-center hidden">
+        <!-- Overlay -->
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="cerrarModalAgregar()"></div>
+        <!-- Modal Content -->
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 relative z-10 transform transition-all scale-100 mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800">Agregar Equipo</h3>
+                    <p class="text-sm text-slate-500">Ingrese los datos del equipo a inventariar.</p>
+                </div>
+                <button onclick="cerrarModalAgregar()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Placa / ID <span class="text-rose-500">*</span></label>
+                    <input type="text" id="extra_placa" class="w-full border-slate-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 font-medium text-slate-800" placeholder="Ej: 50IPO">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Marca</label>
+                        <input type="text" id="extra_marca" class="w-full border-slate-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Modelo</label>
+                        <input type="text" id="extra_modelo" class="w-full border-slate-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Serie</label>
+                    <input type="text" id="extra_serie" class="w-full border-slate-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Categoría</label>
+                    <select id="extra_categoria" class="w-full border-slate-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 text-sm bg-white">
+                        <option value="VARIOS">VARIOS</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Error Message Container -->
+            <div id="modalError" class="hidden mt-4 p-3 bg-rose-50 border border-rose-100 rounded-lg text-rose-600 text-sm flex items-center gap-2">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span id="modalErrorText">Error mensaje</span>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-6 mt-2">
+                 <button onclick="cerrarModalAgregar()" class="px-5 py-2.5 text-slate-500 font-bold hover:bg-slate-50 rounded-xl transition-colors">Cancelar</button>
+                 <button id="btnConfirmarAgregar" onclick="procesarAgregadoManual()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-500/30 transition-all flex items-center gap-2">
+                    <span>Agregar</span>
+                    <svg id="loadingAgregar" class="animate-spin h-5 w-5 text-white hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                 </button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <!-- Estilos para animación de entrada -->
@@ -265,7 +332,11 @@ function buscarTienda(query) {
 
     fetch('/inventario/buscar-tienda', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+        headers: { 
+            'Content-Type': 'application/json', 
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+        },
         body: JSON.stringify({ query })
     })
     .then(r => r.json())
@@ -319,7 +390,11 @@ function seleccionarTienda(cr, plaza) {
     
     fetch('/inventario/obtener-equipos', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+        headers: { 
+            'Content-Type': 'application/json', 
+            'X-CSRF-TOKEN': '{{ csrf_token() }}', 
+            'Accept': 'application/json'
+        },
         body: JSON.stringify({ cr, plaza })
     })
     .then(r => r.json())
@@ -536,14 +611,23 @@ function toggleEstado(radio, id) {
         inputs.forEach(inp => {
             inp.disabled = false;
             inp.classList.remove('disabled:bg-transparent', 'disabled:border-transparent', 'disabled:p-0', 'disabled:text-slate-500');
-            // If it had a value in memory, keep it
+            // Remove the blocking overlay if it exists
+            const wrapper = inp.parentElement;
+            const blocker = wrapper.querySelector('.cursor-not-allowed');
+            if(blocker) blocker.remove();
         });
     } else {
         container.classList.remove('border-rose-100', 'bg-rose-50/30');
         inputs.forEach(inp => {
             inp.disabled = true;
             inp.classList.add('disabled:bg-transparent', 'disabled:border-transparent', 'disabled:p-0', 'disabled:text-slate-500');
-            // Reset to default or memory if needed, but visually disabled looks 'clean'
+            // Re-add blocking overlay
+             const wrapper = inp.parentElement;
+             if(!wrapper.querySelector('.cursor-not-allowed')) {
+                 const blocker = document.createElement('div');
+                 blocker.className = 'absolute inset-0 z-10 cursor-not-allowed';
+                 wrapper.appendChild(blocker);
+             }
         });
     }
     updateCounters();
@@ -657,6 +741,13 @@ function updateFilterOptions(cats) {
     const select = document.getElementById('filtroCategoria');
     select.innerHTML = '<option value="" class="text-slate-900">Todas las Categorías</option>' + 
         cats.map(c => `<option value="${c.categoria}" class="text-slate-900">${c.categoria}</option>`).join('');
+
+    // Populate Category select in modal
+    const catSelect = document.getElementById('extra_categoria');
+    if(catSelect) {
+        catSelect.innerHTML = '<option value="VARIOS">VARIOS</option>' + 
+            cats.map(c => `<option value="${c.categoria}">${c.categoria}</option>`).join('');
+    }
 }
 
 // Reuse Submit Logic
@@ -723,10 +814,20 @@ function submitForm() {
         method: 'POST',
         body: formData,
         headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(async response => {
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+             return response.json();
+        } else {
+             const text = await response.text();
+             console.error("Server Response:", text);
+             throw new Error('Respuesta del servidor inválida. Ver consola para más detalles.');
+        }
+    })
     .then(data => {
         if (data.success) {
             mostrarModal('Éxito', 'Inventario guardado correctamente', 'success');
@@ -748,5 +849,150 @@ function submitForm() {
 
 
 
+
+// --- FUNCIONES EXTRA (AGREGAR EQUIPO) ---
+
+function abrirModalAgregar() {
+    if (!tiendaSeleccionada) {
+        mostrarModal('Atención', 'Seleccione una tienda primero.', 'warning');
+        return;
+    }
+    
+    // Reset Form
+    document.getElementById('extra_placa').value = '';
+    document.getElementById('extra_marca').value = '';
+    document.getElementById('extra_modelo').value = '';
+    document.getElementById('extra_serie').value = '';
+    document.getElementById('extra_categoria').selectedIndex = 0;
+    
+    document.getElementById('modalError').classList.add('hidden');
+    document.getElementById('modalAgregarEquipo').classList.remove('hidden');
+    setTimeout(() => document.getElementById('extra_placa').focus(), 100);
+}
+
+function cerrarModalAgregar() {
+    document.getElementById('modalAgregarEquipo').classList.add('hidden');
+}
+
+function procesarAgregadoManual() {
+    const placa = document.getElementById('extra_placa').value.trim();
+    if(placa.length < 2) {
+        mostrarErrorModal('Ingrese una Placa o Identificador válido.');
+        return;
+    }
+
+    const btn = document.getElementById('btnConfirmarAgregar');
+    const loading = document.getElementById('loadingAgregar');
+    const errorBox = document.getElementById('modalError');
+    
+    // UI Loading
+    btn.disabled = true;
+    loading.classList.remove('hidden');
+    errorBox.classList.add('hidden');
+
+    // 1. Check if already exists in UI
+    // We check values in memory or DOM
+    let duplicated = false;
+    document.querySelectorAll('div[data-maf-id]').forEach(el => {
+        // This is a weak check, ideally check against MAF IDs or Placa values in DOM
+        // Since we don't have all Placas in DOM easily accessible in a map, we skip or do basic check
+    });
+
+    // 2. Register/Find in Backend
+    const dataToSend = {
+        placa: placa,
+        categoria: document.getElementById('extra_categoria').value,
+        marca: document.getElementById('extra_marca').value,
+        modelo: document.getElementById('extra_modelo').value,
+        serie: document.getElementById('extra_serie').value,
+        cr: tiendaSeleccionada.cr,
+        plaza: tiendaSeleccionada.plaza
+    };
+
+    fetch('/inventario/registrar-equipo-manual', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json', 
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(dataToSend)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if(data.success && data.equipo) {
+            agregarEquipoALista(data.equipo);
+        } else {
+             mostrarErrorModal(data.message || 'Error al registrar el equipo.');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        mostrarErrorModal('Error de conexión al registrar el equipo.');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        loading.classList.add('hidden');
+    });
+}
+
+function mostrarErrorModal(msg) {
+    const el = document.getElementById('modalError');
+    document.getElementById('modalErrorText').textContent = msg;
+    el.classList.remove('hidden');
+}
+
+function agregarEquipoALista(equipo) {
+    // Check if duplicate in DOM by ID
+    if(document.querySelector(`div[data-maf-id="${equipo.id}"]`)) {
+        mostrarErrorModal('Este equipo ya está en la lista.');
+        return;
+    }
+
+    // Get input values (User might have edited them in the Add Form)
+    const formMarca = document.getElementById('extra_marca').value.trim();
+    const formModelo = document.getElementById('extra_modelo').value.trim();
+    const formSerie = document.getElementById('extra_serie').value.trim();
+    // const formCat = document.getElementById('extra_categoria').value; 
+
+    // Initialize Memory
+    if (!valoresEditados[equipo.id]) {
+        valoresEditados[equipo.id] = {
+            estado: 'check', 
+            placa: equipo.placa, // Keep original or user input? Standard is Original for ID, Edit for value
+            marca: formMarca || equipo.marca || '',
+            modelo: formModelo || equipo.modelo || '',
+            serie: formSerie || equipo.serie || ''
+        };
+        // If user typed something different, we store it. If empty, we take existing.
+    }
+
+    // Prepare Container for "Agregados"
+    let agregadosContainer = document.getElementById('contenedor-agregados');
+    const mainList = document.getElementById('equiposPorCategoria');
+    
+    if(!agregadosContainer) {
+        agregadosContainer = document.createElement('div');
+        agregadosContainer.id = 'contenedor-agregados';
+        agregadosContainer.className = 'mb-10 animate-fade-in-up bg-blue-50/50 rounded-2xl p-4 border border-blue-100';
+        agregadosContainer.innerHTML = `
+            <h3 class="flex items-center gap-3 text-xl font-bold text-slate-800 mb-6 pb-2 border-b border-blue-200">
+                <span class="w-2 h-8 bg-amber-500 rounded-full"></span>
+                Equipos Agregados Manualmente
+                <span class="ml-auto text-xs font-bold text-amber-600 bg-amber-100 px-2 py-1 rounded">EXTRA</span>
+            </h3>
+            <div class="grid grid-cols-1 gap-6" id="lista-agregados"></div>
+        `;
+        mainList.prepend(agregadosContainer);
+    }
+    
+    const list = document.getElementById('lista-agregados');
+    list.insertAdjacentHTML('beforeend', renderCard(equipo));
+    
+    // Close and Notify
+    cerrarModalAgregar();
+    updateCounters();
+    mostrarModal('Éxito', 'Equipo agregado correctamente.', 'success');
+}
 </script>
 @endsection

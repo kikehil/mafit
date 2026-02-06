@@ -101,6 +101,97 @@ class InventarioController extends Controller
     }
 
     /**
+     * Buscar equipo por placa o serie
+     */
+    public function buscarEquipo(Request $request)
+    {
+        $request->validate([
+            'term' => 'required|string|min:3',
+        ]);
+
+        $term = trim($request->input('term'));
+
+        // Buscar en la tabla maf por placa o serie
+        $equipo = Maf::where('placa', $term)
+            ->orWhere('serie', $term)
+            ->first();
+
+        if ($equipo) {
+            return response()->json([
+                'success' => true,
+                'equipo' => $equipo,
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Equipo no encontrado.',
+        ]);
+    }
+
+    /**
+     * Registrar equipo manual
+     */
+    public function registrarEquipoManual(Request $request)
+    {
+        $request->validate([
+            'placa' => 'required|string',
+            'categoria' => 'required|string',
+            'cr' => 'required|string',
+        ]);
+
+        // Intentar encontrar existente primero
+        $existing = Maf::where('placa', $request->placa)->first();
+        if ($existing) {
+             return response()->json([
+                'success' => true,
+                'equipo' => $existing,
+                'message' => 'El equipo ya existía y ha sido recuperado.'
+            ]);
+        }
+
+        // Obtener último batch para asociar (Requerido por FK)
+        $lastBatch = DB::table('maf_import_batches')
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if (!$lastBatch) {
+             return response()->json([
+                'success' => false,
+                'message' => 'No hay lotes de importación activos para asociar el equipo.',
+            ], 500);
+        }
+
+        try {
+            $maf = Maf::create([
+                'batch_id' => $lastBatch->id,
+                'row_num' => 0, // Indicador de manual
+                'plaza' => $request->plaza,
+                'cr' => $request->cr,
+                // 'tienda' => Buscamos nombre tienda? Opcional
+                'placa' => $request->placa,
+                'marca' => $request->marca,
+                'modelo' => $request->modelo,
+                'serie' => $request->serie,
+                'categoria' => $request->categoria,
+                'descripcion' => 'AGREGADO MANUAL: ' . ($request->modelo ?? 'Equipo'),
+                'imported_at' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'equipo' => $maf,
+                'message' => 'Equipo registrado correctamente.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear equipo: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Obtener equipos de una tienda agrupados por categoría
      */
     public function obtenerEquipos(Request $request)

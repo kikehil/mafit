@@ -55,6 +55,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/buscar-tienda-consulta', [InventarioController::class, 'buscarTiendaConsulta'])->middleware('module:inventario.consulta')->name('buscar-tienda-consulta');
         Route::post('/obtener-equipos-consulta', [InventarioController::class, 'obtenerEquiposConsulta'])->middleware('module:inventario.consulta')->name('obtener-equipos-consulta');
         Route::post('/obtener-tiendas-realizados', [InventarioController::class, 'obtenerTiendasRealizados'])->middleware('module:inventario.realizados')->name('obtener-tiendas-realizados');
+        Route::post('/registrar-equipo-manual', [InventarioController::class, 'registrarEquipoManual'])->middleware('module:inventario.captura')->name('registrar-equipo-manual');
+        Route::post('/buscar-equipo', [InventarioController::class, 'buscarEquipo'])->middleware('module:inventario.captura')->name('buscar-equipo');
     });
 
     // Inventario PSF
