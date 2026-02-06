@@ -242,7 +242,7 @@
                             @if($isAdmin || in_array('inventario.consulta', $userModules))
                             <a href="{{ route('inventario.consulta') }}" class="flex items-center pl-12 pr-4 py-2.5 text-sm rounded-lg transition-colors {{ request()->routeIs('inventario.consulta') ? 'text-white bg-white/5 font-medium' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                                 <span class="w-1.5 h-1.5 rounded-full mr-3 {{ request()->routeIs('inventario.consulta') ? 'bg-blue-400' : 'bg-slate-600' }}"></span>
-                                Consulta Inventario
+                                Consulta Inventario Real
                             </a>
                             @endif
                             @if($isAdmin || in_array('inventario.realizados', $userModules))

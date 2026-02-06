@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Consulta Inventario')
+@section('title', 'Consulta Inventario Real')
 
 @section('content')
 <div class="max-w-7xl mx-auto space-y-6">
     <!-- Header with Glassmorphism -->
     <div class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-20 z-30 transition-all duration-300 hover:shadow-md">
         <div>
-            <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Consulta de Inventario</h1>
+            <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Consulta de Inventario Real</h1>
             <p class="text-slate-500 text-sm mt-1">Busque equipos por tienda o CR</p>
         </div>
         
