@@ -797,7 +797,7 @@ function submitForm() {
         
         if (data.placa) formData.append(`equipos[${mafId}][placa_editada]`, data.placa);
         if (data.marca) formData.append(`equipos[${mafId}][marca_editada]`, data.marca);
-        if (data.modelo) formData.append(`equipos[${mafId}][modelo_editada]`, data.modelo);
+        if (data.modelo) formData.append(`equipos[${mafId}][modelo_editado]`, data.modelo);
         if (data.serie) formData.append(`equipos[${mafId}][serie_editada]`, data.serie);
         
         const inputFoto1 = document.querySelector(`input[type="file"][onchange*="'${mafId}', 1"]`);
@@ -825,7 +825,8 @@ function submitForm() {
         } else {
              const text = await response.text();
              console.error("Server Response:", text);
-             throw new Error('Respuesta del servidor inválida. Ver consola para más detalles.');
+             let snippet = text.substring(0, 100).replace(/<[^>]*>?/gm, ''); // Remove HTML tags
+             throw new Error('Respuesta del servidor inválida (' + snippet + '...). Ver consola para más detalles.');
         }
     })
     .then(data => {

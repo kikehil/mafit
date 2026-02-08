@@ -540,6 +540,7 @@ class InventarioController extends Controller
                 
                 \Log::info("Guardando inventario para maf_id {$mafId} con foto1: " . ($foto1Path ?? 'null') . " y foto2: " . ($foto2Path ?? 'null'));
                 
+                // Guardar/Actualizar inventario
                 $inventarioGuardado = Inventariotda::updateOrCreate(
                     [
                         'maf_id' => $mafId,
@@ -560,39 +561,28 @@ class InventarioController extends Controller
                         'foto2' => $foto2Path,
                     ]
                 );
-                
-                // Forzar actualización de fotos si es necesario (para asegurar que se guarden)
-                if ($foto1Path !== null || $foto2Path !== null) {
-                    $inventarioGuardado->foto1 = $foto1Path;
-                    $inventarioGuardado->foto2 = $foto2Path;
-                    $inventarioGuardado->save();
-                }
-                
-                \Log::info("Inventario guardado ID: {$inventarioGuardado->id}, foto1 en BD: " . ($inventarioGuardado->fresh()->foto1 ?? 'null') . ", foto2 en BD: " . ($inventarioGuardado->fresh()->foto2 ?? 'null'));
             }
 
             DB::commit();
 
-            // Enviar notificaciones por correo a los usuarios asignados a la tienda
+            // Enviar notificaciones por correo (Optimizado: una sola conexión/envío)
             try {
                 $tienda = Tienda::where('cr', $cr)->first();
                 
-                if ($tienda && $tienda->users->count() > 0) {
-                    $usuarioRealizo = auth()->user()->name;
+                if ($tienda) {
+                    $emails = $tienda->users()->whereNotNull('email')->pluck('email')->unique()->filter()->toArray();
                     
-                    foreach ($tienda->users as $usuarioAsignado) {
-                        if ($usuarioAsignado->email) {
-                            Mail::to($usuarioAsignado->email)
-                                ->send(new InventarioNotificacionMail(
-                                    $tiendaNombre,
-                                    $usuarioRealizo,
-                                    $notas
-                                ));
-                        }
+                    if (!empty($emails)) {
+                        $usuarioRealizo = auth()->user()->name ?? 'Usuario de Sistema';
+                        Mail::to($emails)->send(new InventarioNotificacionMail(
+                            $tiendaNombre ?: ($tienda->tienda ?? $cr),
+                            $usuarioRealizo,
+                            $notas
+                        ));
+                        \Log::info("Correo de notificación enviado a: " . implode(', ', $emails));
                     }
                 }
             } catch (\Exception $e) {
-                // Log del error pero no fallar el guardado del inventario
                 \Log::error('Error al enviar notificaciones por correo: ' . $e->getMessage());
             }
 
@@ -716,26 +706,10 @@ class InventarioController extends Controller
             $foto1Url = null;
             $foto2Url = null;
             if ($inventario->foto1) {
-                // Verificar si el archivo existe
-                if (Storage::disk('public')->exists($inventario->foto1)) {
-                    // Usar URL relativa o detectar protocolo automáticamente
-                    $baseUrl = request()->getSchemeAndHttpHost();
-                    $foto1Url = $baseUrl . '/storage/' . $inventario->foto1;
-                } else {
-                    // Log para depuración
-                    \Log::warning("Foto1 no encontrada: {$inventario->foto1} para inventario ID: {$inventario->id}");
-                }
+                $foto1Url = asset('storage/' . $inventario->foto1);
             }
             if ($inventario->foto2) {
-                // Verificar si el archivo existe
-                if (Storage::disk('public')->exists($inventario->foto2)) {
-                    // Usar URL relativa o detectar protocolo automáticamente
-                    $baseUrl = request()->getSchemeAndHttpHost();
-                    $foto2Url = $baseUrl . '/storage/' . $inventario->foto2;
-                } else {
-                    // Log para depuración
-                    \Log::warning("Foto2 no encontrada: {$inventario->foto2} para inventario ID: {$inventario->id}");
-                }
+                $foto2Url = asset('storage/' . $inventario->foto2);
             }
             
             return (object) [
