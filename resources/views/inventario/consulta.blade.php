@@ -5,10 +5,10 @@
 @section('content')
 <div class="max-w-7xl mx-auto space-y-6">
     <!-- Header with Glassmorphism -->
-    <div class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-20 z-10 transition-all duration-300 hover:shadow-md">
+    <div class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-[64px] z-10 transition-all duration-300 hover:shadow-md">
         <div>
             <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Consulta de Inventario Real</h1>
-            <p class="text-slate-500 text-sm mt-1">Busque equipos por tienda o CR</p>
+            <p class="text-slate-500 text-sm mt-1">Busque equipos por tienda o CR <span class="text-[10px] bg-slate-100 px-1 rounded">v1.0.3-rel</span></p>
         </div>
         
         <!-- Search Bar -->

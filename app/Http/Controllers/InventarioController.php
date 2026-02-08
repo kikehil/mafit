@@ -706,10 +706,10 @@ class InventarioController extends Controller
             $foto1Url = null;
             $foto2Url = null;
             if ($inventario->foto1) {
-                $foto1Url = asset('storage/' . $inventario->foto1);
+                $foto1Url = '/storage/' . $inventario->foto1;
             }
             if ($inventario->foto2) {
-                $foto2Url = asset('storage/' . $inventario->foto2);
+                $foto2Url = '/storage/' . $inventario->foto2;
             }
             
             return (object) [
