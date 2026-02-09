@@ -39,6 +39,31 @@ class InventarioController extends Controller
     }
 
     /**
+     * Generar URL pública para una foto (funciona con local y Google Drive)
+     */
+    private function generarUrlFoto($path)
+    {
+        if (!$path) {
+            return null;
+        }
+
+        $disk = config('filesystems.default', 'public');
+        
+        if ($disk === 'google') {
+            // Para Google Drive, generar URL pública
+            try {
+                return Storage::disk('google')->url($path);
+            } catch (\Exception $e) {
+                \Log::error("Error generando URL de Google Drive: " . $e->getMessage());
+                return null;
+            }
+        } else {
+            // Para almacenamiento local
+            return '/storage/' . $path;
+        }
+    }
+
+    /**
      * Mostrar formulario de captura de inventario
      */
     public function captura()
@@ -512,30 +537,33 @@ class InventarioController extends Controller
                 $foto1Path = $inventarioExistente->foto1 ?? null;
                 $foto2Path = $inventarioExistente->foto2 ?? null;
                 
+                // Obtener el disco de almacenamiento configurado (public o google)
+                $disk = config('filesystems.default', 'public');
+                
                 // Procesar foto1 si existe
                 if ($request->hasFile("equipos.{$mafId}.foto1")) {
                     // Eliminar foto anterior si existe
-                    if ($foto1Path && Storage::disk('public')->exists($foto1Path)) {
-                        Storage::disk('public')->delete($foto1Path);
+                    if ($foto1Path && Storage::disk($disk)->exists($foto1Path)) {
+                        Storage::disk($disk)->delete($foto1Path);
                     }
                     $foto1 = $request->file("equipos.{$mafId}.foto1");
                     $extension1 = $foto1->getClientOriginalExtension();
                     $nombreFoto1 = $placaLimpia . '_1.' . $extension1;
-                    $foto1Path = $foto1->storeAs('inventario_fotos', $nombreFoto1, 'public');
-                    \Log::info("Foto1 guardada para maf_id {$mafId}: {$foto1Path}");
+                    $foto1Path = $foto1->storeAs('inventario_fotos', $nombreFoto1, $disk);
+                    \Log::info("Foto1 guardada en {$disk} para maf_id {$mafId}: {$foto1Path}");
                 }
                 
                 // Procesar foto2 si existe
                 if ($request->hasFile("equipos.{$mafId}.foto2")) {
                     // Eliminar foto anterior si existe
-                    if ($foto2Path && Storage::disk('public')->exists($foto2Path)) {
-                        Storage::disk('public')->delete($foto2Path);
+                    if ($foto2Path && Storage::disk($disk)->exists($foto2Path)) {
+                        Storage::disk($disk)->delete($foto2Path);
                     }
                     $foto2 = $request->file("equipos.{$mafId}.foto2");
                     $extension2 = $foto2->getClientOriginalExtension();
                     $nombreFoto2 = $placaLimpia . '_2.' . $extension2;
-                    $foto2Path = $foto2->storeAs('inventario_fotos', $nombreFoto2, 'public');
-                    \Log::info("Foto2 guardada para maf_id {$mafId}: {$foto2Path}");
+                    $foto2Path = $foto2->storeAs('inventario_fotos', $nombreFoto2, $disk);
+                    \Log::info("Foto2 guardada en {$disk} para maf_id {$mafId}: {$foto2Path}");
                 }
                 
                 \Log::info("Guardando inventario para maf_id {$mafId} con foto1: " . ($foto1Path ?? 'null') . " y foto2: " . ($foto2Path ?? 'null'));
@@ -703,14 +731,8 @@ class InventarioController extends Controller
             }
             
             // Obtener URLs de las fotos si existen
-            $foto1Url = null;
-            $foto2Url = null;
-            if ($inventario->foto1) {
-                $foto1Url = '/storage/' . $inventario->foto1;
-            }
-            if ($inventario->foto2) {
-                $foto2Url = '/storage/' . $inventario->foto2;
-            }
+            $foto1Url = $this->generarUrlFoto($inventario->foto1);
+            $foto2Url = $this->generarUrlFoto($inventario->foto2);
             
             return (object) [
                 'id' => $maf->id,

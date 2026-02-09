@@ -50,6 +50,10 @@ DB_USERNAME
 *.rar
 *.tar.gz
 
+# Google Drive credentials
+/storage/app/google/*.json
+get-google-refresh-token.php
+
 
 
 

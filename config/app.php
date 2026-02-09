@@ -21,6 +21,7 @@ return [
     'providers' => ServiceProvider::defaultProviders()->merge([
         App\Providers\AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
+        App\Providers\GoogleDriveServiceProvider::class,
     ])->toArray(),
     'aliases' => Facade::defaultAliases()->merge([])->toArray(),
 ];
