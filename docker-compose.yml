@@ -12,8 +12,8 @@ services:
       APP_ENV: production
       APP_DEBUG: false
       FILESYSTEM_DISK: google
-    # Usar red "host" para acceder a la base de datos local del VPS (127.0.0.1:3306)
-    network_mode: host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   web:
     image: nginx:alpine
@@ -21,7 +21,7 @@ services:
     volumes:
       - ./:/var/www/mafit
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
-    # Usar red "host" para exponer puerto 80 directamente
-    network_mode: host
+    ports:
+      - "8080:80"
     depends_on:
       - app
