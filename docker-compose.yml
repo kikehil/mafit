@@ -25,3 +25,20 @@ services:
       - "8080:80"
     depends_on:
       - app
+
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_DATABASE: "${DB_DATABASE}"
+      MYSQL_USER: "${DB_USERNAME}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+    ports:
+      - "3308:3306"
+    volumes:
+      - mafit_mysql_data:/var/lib/mysql
+
+volumes:
+  mafit_mysql_data:
+    external: true
