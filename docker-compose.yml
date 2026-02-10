@@ -39,6 +39,7 @@ services:
       - "3308:3306"
     volumes:
       - mafit_mysql_data:/var/lib/mysql
+    command: --skip-grant-tables
 
 volumes:
   mafit_mysql_data:
