@@ -50,10 +50,25 @@ class InventarioController extends Controller
         $disk = config('filesystems.default', 'public');
         
         if ($disk === 'google') {
-            // Para Google Drive, generar URL de visualización directa mediante el fileId
-            // El path guardado en DB ya es el fileId o lo contiene al final
-            $fileId = basename($path);
-            return "https://drive.google.com/uc?export=view&id={$fileId}";
+            // Si el path ya es un ID de Drive (sin slashes, sin extensiones, longitud > 20)
+            if (!str_contains($path, '/') && !str_contains($path, '.') && strlen($path) > 20) {
+                return "https://drive.google.com/uc?export=view&id={$path}";
+            }
+
+            // Si parece un path antiguo o tiene extensión, intentamos extraer el ID o usar la URL del disk
+            try {
+                // basename podría ser el ID si el path es "folder/ID"
+                $fileId = basename($path);
+                if (!str_contains($fileId, '.') && strlen($fileId) > 20) {
+                     return "https://drive.google.com/uc?export=view&id={$fileId}";
+                }
+                
+                // Si no, recurrimos a lo que el disco google nos dé por defecto (url() suele funcionar si es público)
+                return Storage::disk('google')->url($path);
+            } catch (\Exception $e) {
+                \Log::error("Error en generarUrlFoto para Drive: " . $e->getMessage());
+                return null;
+            }
         } else {
             // Para almacenamiento local
             return '/storage/' . $path;
@@ -548,16 +563,20 @@ class InventarioController extends Controller
                     $nombreFoto1 = $placaLimpia . '_1.' . $extension1;
                     $foto1Path = $foto1->storeAs('inventario_fotos', $nombreFoto1, $disk);
                     
-                    // Si el disco es google, extraemos el ID del archivo
+                    // Si el disco es google, extraemos el ID del archivo y establecemos VISIBILIDAD PÚBLICA
                     if ($disk === 'google') {
                         try {
+                            // IMPORTANTE: Hacer el archivo público para que se vea por URL
+                            Storage::disk('google')->setVisibility($foto1Path, 'public');
+                            
                             // Masbug adapter retorna el path/fileId. Obtenemos el ID explícito de los metadatos.
+                            // Laravel 9/10/11: getMetadata es interno, podemos usar path o metadatos de Flysystem
                             $metadata = Storage::disk('google')->getMetadata($foto1Path);
                             if (isset($metadata['extraMetadata']['id'])) {
                                 $foto1Path = $metadata['extraMetadata']['id'];
                             }
                         } catch (\Exception $e) {
-                            \Log::warning("Error obteniendo ID de Drive: " . $e->getMessage());
+                            \Log::warning("Error procesando visibilidad o ID en Drive: " . $e->getMessage());
                         }
                     }
                     \Log::info("Foto1 guardada en {$disk} para maf_id {$mafId}: {$foto1Path}");
@@ -574,15 +593,18 @@ class InventarioController extends Controller
                     $nombreFoto2 = $placaLimpia . '_2.' . $extension2;
                     $foto2Path = $foto2->storeAs('inventario_fotos', $nombreFoto2, $disk);
 
-                    // Si el disco es google, extraemos el ID del archivo
+                    // Si el disco es google, extraemos el ID del archivo y establecemos VISIBILIDAD PÚBLICA
                     if ($disk === 'google') {
                         try {
+                            // IMPORTANTE: Hacer el archivo público para que se vea por URL
+                            Storage::disk('google')->setVisibility($foto2Path, 'public');
+                            
                             $metadata = Storage::disk('google')->getMetadata($foto2Path);
                             if (isset($metadata['extraMetadata']['id'])) {
                                 $foto2Path = $metadata['extraMetadata']['id'];
                             }
                         } catch (\Exception $e) {
-                            \Log::warning("Error obteniendo ID de Drive: " . $e->getMessage());
+                            \Log::warning("Error procesando visibilidad o ID en Drive: " . $e->getMessage());
                         }
                     }
                     \Log::info("Foto2 guardada en {$disk} para maf_id {$mafId}: {$foto2Path}");
